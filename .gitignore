@@ -7,3 +7,5 @@ out
 .env
 build
 .vscode
+.agents
+skills-lock.json

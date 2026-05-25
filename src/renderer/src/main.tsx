@@ -1,5 +1,6 @@
 import './assets/main.css'
 import { ThemeProvider } from '@/components/theme-provider'
+import { ScrollArea } from '@/components/ui/scroll-area'
 
 import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
@@ -10,7 +11,9 @@ createRoot(document.getElementById('root')!).render(
   <StrictMode>
     <ThemeProvider defaultTheme="dark" storageKey="vite-ui-theme">
       <BrowserRouter>
-        <App />
+        <ScrollArea className="h-screen w-screen">
+          <App />
+        </ScrollArea>
       </BrowserRouter>
     </ThemeProvider>
   </StrictMode>

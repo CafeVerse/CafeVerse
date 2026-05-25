@@ -1,6 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react'
-import { Routes, Route, Navigate, useLocation } from 'react-router-dom'
-import { Flame, Film, Tv, Bookmark } from 'lucide-react'
+import { Routes, Route, Navigate } from 'react-router-dom'
 
 // Import types
 import { MediaItem } from '@/types'
@@ -17,8 +16,6 @@ const TMDB_IMAGE_BASE = 'https://image.tmdb.org/t/p/original'
 const API_BASE_URL = 'http://localhost:8080'
 
 function App(): React.JSX.Element {
-  const location = useLocation()
-
   // API Data States
   const [featuredItem, setFeaturedItem] = useState<MediaItem | null>(null)
   const [recentTrending, setRecentTrending] = useState<MediaItem[]>([])
@@ -93,37 +90,6 @@ function App(): React.JSX.Element {
     return watchlist.some((w) => w.id === item.id && w.contentType === item.contentType)
   }
 
-  // Dynamic header rendering based on active route path
-  const renderHeaderTitle = (): React.ReactNode => {
-    const path = location.pathname
-    if (path === '/') {
-      return (
-        <>
-          <Flame className="text-primary size-5" /> Dashboard
-        </>
-      )
-    } else if (path === '/movies') {
-      return (
-        <>
-          <Film className="text-primary size-5" /> Browse Movies
-        </>
-      )
-    } else if (path === '/tvshows') {
-      return (
-        <>
-          <Tv className="text-primary size-5" /> Browse TV Shows
-        </>
-      )
-    } else if (path === '/watchlist') {
-      return (
-        <>
-          <Bookmark className="text-primary size-5" /> My Curated Watchlist
-        </>
-      )
-    }
-    return 'Cineverse'
-  }
-
   return (
     <div className="flex h-screen w-screen overflow-hidden bg-background font-sans text-foreground antialiased selection:bg-primary selection:text-primary-foreground">
       {/* 1. GLASSMORPHIC OBISIDAN SIDEBAR */}
@@ -133,15 +99,6 @@ function App(): React.JSX.Element {
       <main className="flex-1 flex flex-col h-full overflow-y-auto bg-background relative">
         {/* Glow backdrop behind header */}
         <div className="absolute top-0 right-1/4 h-75 w-125 rounded-full bg-primary/5 blur-[120px]" />
-
-        {/* TOP STATUS NAVIGATION BAR */}
-        <header className="flex h-20 items-center justify-between px-8 border-b border-border/40 bg-background/20 backdrop-blur-md z-10 shrink-0">
-          <div className="flex items-center gap-2">
-            <h1 className="text-xl font-bold uppercase tracking-wider text-foreground flex items-center gap-2.5">
-              {renderHeaderTitle()}
-            </h1>
-          </div>
-        </header>
 
         {/* CONTAINER CONTENT */}
         <div className="flex-1 p-8 overflow-y-auto">
