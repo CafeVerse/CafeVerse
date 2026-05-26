@@ -1,0 +1,206 @@
+name: Build and Auto-Release App
+
+on:
+  push:
+    branches:
+      - main
+      - master
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  # Job 1: Auto-increment version, commit/tag it, and create a draft release
+  prepare:
+    name: Prepare Release
+    runs-on: ubuntu-latest
+    if: "!contains(github.event.head_commit.message, '[skip ci]')"
+    outputs:
+      version: ${{ steps.bump.outputs.version }}
+      tag: ${{ steps.bump.outputs.tag }}
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          fetch-depth: 0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Configure Git Bot
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+
+      - name: Increment Version & Push Tag
+        id: bump
+        run: |
+          # Increment patch version (e.g. 1.0.0 -> 1.0.1) in package.json and commit it
+          NEW_VERSION=$(npm version patch -m "chore(release): bump version to %s [skip ci]")
+          echo "version=${NEW_VERSION}" >> $GITHUB_OUTPUT
+          echo "tag=${NEW_VERSION}" >> $GITHUB_OUTPUT
+
+          # Push the commit and the newly created tag back to GitHub
+          git push origin HEAD:${{ github.ref_name }}
+          git push origin ${NEW_VERSION}
+
+      - name: Generate Dynamic Release Notes & Camo Badge
+        run: |
+          node -e '
+          const fs = require("fs");
+          const execSync = require("child_process").execSync;
+
+          let lastTag = "";
+          try {
+            // Find the tag before the newly pushed tag
+            const tags = execSync("git tag --sort=-v:refname").toString().trim().split("\n").filter(Boolean);
+            if (tags.length > 1) {
+              lastTag = tags[1]; // Index 0 is the one we just pushed, index 1 is the previous one
+            }
+          } catch (e) {
+            console.log("No previous tags found");
+          }
+
+          const logCmd = lastTag ? `git log ${lastTag}..HEAD~1 --pretty=format:"%s"` : "git log --pretty=format:\"%s\"";
+          let commits = [];
+          try {
+            commits = execSync(logCmd).toString().trim().split("\n").filter(Boolean);
+          } catch (e) {
+            commits = execSync("git log -n 10 --pretty=format:\"%s\"").toString().trim().split("\n").filter(Boolean);
+          }
+
+          let news = [];
+          let updates = [];
+          let fixes = [];
+
+          commits.forEach(msg => {
+            if (msg.includes("[skip ci]") || msg.startsWith("chore(release):")) return;
+            
+            const cleanMsg = msg.replace(/^(feat|new|fix|chore|refactor|style|perf|docs|test)(\(.*?\))?:\s*/i, "");
+            
+            if (/^(feat|new)/i.test(msg)) {
+              news.push(`- ${cleanMsg}`);
+            } else if (/^(fix)/i.test(msg)) {
+              fixes.push(`- ${cleanMsg}`);
+            } else {
+              updates.push(`- ${cleanMsg}`);
+            }
+          });
+
+          if (news.length === 0) news.push("- Minor improvements and general core alignments.");
+          if (updates.length === 0) updates.push("- Subsystem and dependency refinements.");
+          if (fixes.length === 0) fixes.push("- Bug resolution and stability hardening.");
+
+          const version = "${{ steps.bump.outputs.version }}";
+
+          const body = `
+          <p align="center">
+            <img src="https://img.shields.io/badge/CINEVERSE-${version}-orange?style=for-the-badge" alt="CINEVERSE Release Badge" />
+          </p>
+
+          ## 🚀 Release Notes - ${version}
+
+          ### ✨ New
+          ${news.join("\n")}
+
+          ### 🔧 Update & Improvement
+          ${updates.join("\n")}
+
+          ### 🐛 Bug Fixed
+          ${fixes.join("\n")}
+
+          ---
+          *This is an automated production build packaged securely on GitHub Actions.*
+          `;
+
+          fs.writeFileSync("release_notes.md", body.trim());
+          '
+        shell: bash
+
+      - name: Create Draft Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ steps.bump.outputs.tag }}
+          name: CINEVERSE ${{ steps.bump.outputs.version }}
+          body_path: release_notes.md
+          draft: true
+          prerelease: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  # Job 2: Build the app binaries on Windows, Mac, and Linux for x64 and arm64
+  build:
+    name: Build (${{ matrix.os }})
+    needs: prepare
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+
+    steps:
+      - name: Checkout Tagged Code
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ needs.prepare.outputs.tag }}
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+
+      - name: Install Dependencies
+        run: npm ci
+
+      - name: Build Electron App
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          # Build renderer and main bundles first
+          npm run build
+
+          # Run OS-specific electron-builder packaging for x64 and arm64
+          if [ "$RUNNER_OS" == "Windows" ]; then
+            npx electron-builder --win --x64 --arm64
+          elif [ "$RUNNER_OS" == "macOS" ]; then
+            npx electron-builder --mac --x64 --arm64
+          elif [ "$RUNNER_OS" == "Linux" ]; then
+            npx electron-builder --linux --x64 --arm64
+          fi
+        shell: bash
+
+      - name: Upload Binaries to Draft Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ needs.prepare.outputs.tag }}
+          files: |
+            dist/*.exe
+            dist/*.dmg
+            dist/*.zip
+            dist/*.pkg
+            dist/*.AppImage
+            dist/*.deb
+            dist/*.snap
+            !dist/mac
+            !dist/win-unpacked
+            !dist/linux-unpacked
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  # Job 3: Finalize and publish the draft release after all platforms succeed
+  publish:
+    name: Publish Release
+    needs: [prepare, build]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Publish Draft Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ needs.prepare.outputs.tag }}
+          draft: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

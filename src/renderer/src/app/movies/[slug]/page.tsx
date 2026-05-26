@@ -134,14 +134,14 @@ export default function MovieDetailPage(): React.JSX.Element {
   return (
     <div className="w-full pb-24">
       {/* 1. Cinematic Full-Bleed Hero Banner */}
-      <div className="relative w-full h-[65vh] min-h-[500px] mb-12">
+      <div className="relative w-full h-[65vh] min-h-125 mb-12">
         <img
           src={getImageUrl(movie.backdropPath)}
           alt={movie.title}
           className="absolute inset-0 h-full w-full object-cover"
         />
-        <div className="absolute inset-0 bg-gradient-to-t from-background via-background/20 to-transparent" />
-        <div className="absolute inset-0 bg-gradient-to-r from-background/90 via-background/40 to-transparent" />
+        <div className="absolute inset-0 bg-linear-to-t from-background via-background/20 to-transparent" />
+        <div className="absolute inset-0 bg-linear-to-r from-background/90 via-background/40 to-transparent" />
 
         <button
           onClick={() => navigate('/movies')}
@@ -232,10 +232,10 @@ export default function MovieDetailPage(): React.JSX.Element {
                       <img
                         src={getImageUrl(c.profilePath)}
                         alt={c.name}
-                        className="w-full aspect-[2/3] object-cover grayscale opacity-80 hover:grayscale-0 hover:opacity-100 transition-none"
+                        className="w-full aspect-2/3 object-cover grayscale opacity-80 hover:grayscale-0 hover:opacity-100 transition-none"
                       />
                     ) : (
-                      <div className="w-full aspect-[2/3] bg-card flex items-center justify-center">
+                      <div className="w-full aspect-2/3 bg-card flex items-center justify-center">
                         <span className="text-xl font-black text-muted-foreground uppercase">
                           {c.name.charAt(0)}
                         </span>
@@ -270,7 +270,7 @@ export default function MovieDetailPage(): React.JSX.Element {
                   <img
                     src={getImageUrl(sim.posterPath)}
                     alt={sim.title}
-                    className="w-24 aspect-[2/3] object-cover"
+                    className="w-24 aspect-2/3 object-cover"
                   />
                   <div className="flex flex-col justify-center gap-2">
                     <span className="text-base font-bold text-white group-hover:text-primary transition-none leading-tight">
