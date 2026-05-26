@@ -128,3 +128,89 @@ All API endpoints are public and do not require API Key authentication. Any clie
 - **Endpoint**: `GET /api/tvshows/:id/episodes/:s_e`
 - **Sample URL**: `/api/tvshows/1/episodes/S01E02`
 - **Description**: Parses case-insensitive standard SxxExx notation (e.g., `S01E02` or `s1e2`) and returns the specific episode details.
+
+# Player Embed Endpoints
+
+These endpoints are used to embed the video player for movies and TV show episodes.
+
+## Base URL for embeds
+
+The embed player is served from `https://vaplayer.ru/embed/`.
+
+### **1. Movie Embed**
+
+Embeds a movie player using an IMDB or TMDB ID.
+
+- **Endpoint:** `GET /embed/movie/{id}`
+- **Path Parameter:**
+  - `id` (required): IMDB ID (with "tt" prefix) or TMDB ID (numeric only).
+- **Example URL:**
+  - **IMDB ID:** `https://vaplayer.ru/embed/movie/tt23779058`
+  - **TMDB ID:** `https://vaplayer.ru/embed/movie/1147301`
+
+#### **2. TV Show Episode Embed**
+
+Embeds a specific TV show episode. The `id` can be an IMDB or TMDB ID.
+
+- **Endpoint:** `GET /embed/tv/{id}/{season}/{episode}`
+- **URL Formats:** The endpoint supports several formats for specifying the season and episode.
+  | Format | Example URL |
+  | :--- | :--- |
+  | Numeric | `/embed/tv/205715/1/1` |
+  | SxxExx | `/embed/tv/205715/S01E01` |
+  | Dash | `/embed/tv/205715/1-1` |
+  | Query String | `/embed/tv?tmdb=205715&season=1&episode=1` |
+
+### 🛠️ Optional Query Parameters (for all embed endpoints)
+
+You can customize the player's appearance, playback, and subtitles.
+
+- **UI Colors:**
+  - `primaryColor`: Primary UI color (e.g., `#ff0000`).
+- **Title & Display:**
+  - `title`: Custom title for the player (URL encoded).
+  - `poster`: URL for a custom poster/thumbnail image.
+  - `showTitle`: Show or hide the title overlay (default: `true`).
+- **Playback:**
+  - `startAt` or `resumeAt`: Start playback at a specific time in seconds.
+- **Subtitles:**
+  - `sub_url` or `sub_file`: URL to a remote subtitle file (`.srt` or `.vtt`).
+  - `sub_label`: Label for the subtitle track.
+  - `sub_lang`: Subtitle language code (default: `en`).
+  - `sub_default`: Set this subtitle as the default track (`true`/`false`).
+  - `ds_lang` or `lang`: Default subtitle language for OpenSubtitles auto-search (e.g., `en`, `de`, `eng`).
+
+### 📊 Content & Metadata Endpoints
+
+These endpoints provide lists of available content and library statistics.
+
+#### **1. Content Library Stats**
+
+Returns total counts of movies, TV shows, episodes, and people in the library. The response is cached and updated every 24 hours.
+
+- **Endpoint:** `GET /imdb/api/?action=stats`
+- **Example Response:**
+
+```json
+{
+  "content_library": {
+    "movies": 89155,
+    "tv_shows": 19012,
+    "episodes": 464692
+  },
+  "cached": true,
+  "generated_at": "2026-03-05T14:39:56+00:00"
+}
+```
+
+#### **2. List Latest Content**
+
+Returns a paginated list (24 results per page) of the most recently added movies, TV shows, or episodes.
+
+- **Endpoint:** `GET /movies/latest/page-{PAGE}.json`
+- **Endpoint:** `GET /tvshows/latest/page-{PAGE}.json`
+- **Endpoint:** `GET /episodes/latest/page-{PAGE}.json`
+
+### 🛡️ Domain Whitelisting
+
+For security, VidAPI supports domain whitelisting. Only domains you configure in the dashboard can embed the player. API keys are required for authenticated requests.

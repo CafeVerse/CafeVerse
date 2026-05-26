@@ -35,10 +35,24 @@ function createWindow(): void {
   }
 }
 
+// Enable Widevine feature
+app.commandLine.appendSwitch('enable-features', 'Widevine')
+
 // This method will be called when Electron has finished
 // initialization and is ready to create browser windows.
 // Some APIs can only be used after this event occurs.
-app.whenReady().then(() => {
+app.whenReady().then(async () => {
+  try {
+    // eslint-disable-next-line @typescript-eslint/no-require-imports, @typescript-eslint/no-explicit-any
+    const { components } = require('electron') as any
+    if (components) {
+      await components.whenReady()
+      console.log('components ready:', components.status())
+    }
+  } catch (err) {
+    console.error('Failed to load components:', err)
+  }
+
   // Set app user model id for windows
   electronApp.setAppUserModelId('com.electron')
 

@@ -11,6 +11,10 @@ import { Movies } from '@/pages/movies'
 import { TvShows } from '@/pages/tvshows'
 import { Watchlist } from '@/pages/watchlist'
 import { MovieDetail } from '@/pages/movieDetail'
+import { TermsOfService } from '@/pages/terms'
+import { PrivacyPolicy } from '@/pages/privacy'
+import { DmcaPolicy } from '@/pages/dmca'
+import { ContactUs } from '@/pages/contact'
 
 const TMDB_IMAGE_BASE = 'https://image.tmdb.org/t/p/original'
 const API_BASE_URL = 'http://localhost:8080'
@@ -162,6 +166,10 @@ function App(): React.JSX.Element {
                 />
               }
             />
+            <Route path="/terms" element={<TermsOfService />} />
+            <Route path="/privacy" element={<PrivacyPolicy />} />
+            <Route path="/dmca" element={<DmcaPolicy />} />
+            <Route path="/contact" element={<ContactUs />} />
             <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
         </div>
