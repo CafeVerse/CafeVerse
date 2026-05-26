@@ -1,7 +1,7 @@
 import React from 'react'
 import { Link } from 'react-router-dom'
 
-export const ContactUs: React.FC = () => {
+export default function ContactUsPage(): React.JSX.Element {
   return (
     <div className="max-w-4xl mx-auto py-16 px-8 text-left text-foreground/90 space-y-12">
       <div className="space-y-2 border-b border-white/5 pb-8">

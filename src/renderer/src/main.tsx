@@ -4,17 +4,15 @@ import { ScrollArea } from '@/components/ui/scroll-area'
 
 import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
-import { BrowserRouter } from 'react-router-dom'
-import App from '@/App'
+import { RouterProvider } from 'react-router-dom'
+import { router } from './router'
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
     <ThemeProvider defaultTheme="dark" storageKey="vite-ui-theme">
-      <BrowserRouter>
-        <ScrollArea className="h-screen w-screen">
-          <App />
-        </ScrollArea>
-      </BrowserRouter>
+      <ScrollArea className="h-screen w-screen">
+        <RouterProvider router={router} />
+      </ScrollArea>
     </ThemeProvider>
   </StrictMode>
 )

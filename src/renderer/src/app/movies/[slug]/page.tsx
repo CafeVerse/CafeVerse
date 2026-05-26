@@ -1,26 +1,15 @@
 import React, { useState, useEffect } from 'react'
-import { useParams, useNavigate } from 'react-router-dom'
+import { useParams, useNavigate, useOutletContext } from 'react-router-dom'
 import { Star, ChevronLeft, Play } from 'lucide-react'
 import { MediaItem } from '@/types'
 import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
+import { AppContextType } from '../../layout'
 
-interface MovieDetailProps {
-  API_BASE_URL: string
-  getImageUrl: (path?: string) => string
-  toggleWatchlist: (item: MediaItem) => void
-  isItemInWatchlist: (item: MediaItem) => boolean
-  getSlug: (title?: string) => string
-}
-
-export const MovieDetail: React.FC<MovieDetailProps> = ({
-  API_BASE_URL,
-  getImageUrl,
-  toggleWatchlist,
-  getSlug
-}) => {
+export default function MovieDetailPage(): React.JSX.Element {
   const { slug } = useParams<{ slug: string }>()
   const navigate = useNavigate()
+  const { API_BASE_URL, getImageUrl, toggleWatchlist, getSlug } = useOutletContext<AppContextType>()
 
   const [movie, setMovie] = useState<MediaItem | null>(null)
   const [loading, setLoading] = useState<boolean>(true)

@@ -1,20 +1,14 @@
 import React, { useState, useEffect } from 'react'
-import { Search, X, Loader2, Star, ChevronLeft, ChevronRight, Tv } from 'lucide-react'
+import { Search, X, Loader2, Star, ChevronLeft, ChevronRight, Film } from 'lucide-react'
 import { MediaItem, MetaPagination } from '@/types'
+import { useNavigate, useOutletContext } from 'react-router-dom'
+import { AppContextType } from '../layout'
 
-interface TvShowsProps {
-  API_BASE_URL: string
-  getImageUrl: (path?: string) => string
-  isItemInWatchlist: (item: MediaItem) => boolean
-  getSlug: (title?: string) => string
-}
+export default function MoviesPage(): React.JSX.Element {
+  const navigate = useNavigate()
+  const { API_BASE_URL, getImageUrl, isItemInWatchlist, getSlug } =
+    useOutletContext<AppContextType>()
 
-export const TvShows: React.FC<TvShowsProps> = ({
-  API_BASE_URL,
-  getImageUrl,
-  isItemInWatchlist,
-  getSlug
-}) => {
   // Search & Filter States
   const [searchQuery, setSearchQuery] = useState('')
   const [debouncedSearch, setDebouncedSearch] = useState('')
@@ -22,7 +16,7 @@ export const TvShows: React.FC<TvShowsProps> = ({
   const [sortBy, setSortBy] = useState<string>('popularity')
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc')
   const [currentPage, setCurrentPage] = useState<number>(1)
-  const [itemsPerPage] = useState<number>(12)
+  const [itemsPerPage] = useState<number>(24)
 
   // API Data States
   const [mediaList, setMediaList] = useState<MediaItem[]>([])
@@ -58,9 +52,9 @@ export const TvShows: React.FC<TvShowsProps> = ({
           params.append('genre', selectedGenre)
         }
 
-        const response = await fetch(`${API_BASE_URL}/api/tvshows?${params.toString()}`)
+        const response = await fetch(`${API_BASE_URL}/api/movies?${params.toString()}`)
         if (!response.ok) {
-          throw new Error('Failed to load TV shows')
+          throw new Error('Failed to load movies')
         }
 
         const result = await response.json()
@@ -92,12 +86,13 @@ export const TvShows: React.FC<TvShowsProps> = ({
   ])
 
   const availableGenres = [
-    'Drama',
-    'Crime',
+    'Action',
+    'Adventure',
+    'Science Fiction',
     'Comedy',
-    'Sci-Fi & Fantasy',
-    'Action & Adventure',
-    'Mystery'
+    'Drama',
+    'Thriller',
+    'Animation'
   ]
 
   return (
@@ -111,7 +106,7 @@ export const TvShows: React.FC<TvShowsProps> = ({
           </span>
           <input
             type="text"
-            placeholder="Search TV shows..."
+            placeholder="Search movies..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             className="w-full bg-muted/70 border border-border rounded-xl pl-10 pr-4 py-2.5 text-sm text-foreground placeholder-muted-foreground focus:outline-none focus:border-primary/80 focus:ring-1 focus:ring-primary/45 transition-all duration-300"
@@ -139,9 +134,9 @@ export const TvShows: React.FC<TvShowsProps> = ({
             >
               <option value="popularity">Popularity</option>
               <option value="vote_average">User Score</option>
-              <option value="first_air_date">First Air Date</option>
+              <option value="release_date">Release Date</option>
               <option value="created_at">Date Imported</option>
-              <option value="name">Alphabetical</option>
+              <option value="title">Alphabetical</option>
             </select>
           </div>
 
@@ -218,7 +213,7 @@ export const TvShows: React.FC<TvShowsProps> = ({
       ) : error ? (
         <div className="flex flex-col items-center justify-center py-20 text-center gap-3">
           <X className="size-10 text-destructive bg-destructive/10 p-2.5 rounded-full border border-destructive/20" />
-          <h4 className="text-base font-bold text-foreground">Failed to load TV shows</h4>
+          <h4 className="text-base font-bold text-foreground">Failed to load movies</h4>
           <p className="text-sm text-muted-foreground max-w-md">{error}</p>
         </div>
       ) : mediaList.length > 0 ? (
@@ -228,7 +223,10 @@ export const TvShows: React.FC<TvShowsProps> = ({
             {mediaList.map((item) => (
               <div
                 key={item.id}
-                className="group flex flex-col gap-3 rounded-2xl bg-card/40 border border-border p-3 transition-all duration-300 hover:bg-accent/60 hover:-translate-y-1.5 hover:shadow-2xl"
+                onClick={() =>
+                  navigate('/movies/' + (item.slug || getSlug(item.title || item.name)))
+                }
+                className="group flex flex-col gap-3 rounded-2xl bg-card/40 border border-border p-3 transition-all duration-300 hover:bg-accent/60 hover:-translate-y-1.5 hover:shadow-2xl cursor-pointer"
               >
                 <div className="relative aspect-2/3 overflow-hidden rounded-xl bg-muted">
                   <img
@@ -275,7 +273,7 @@ export const TvShows: React.FC<TvShowsProps> = ({
                           : 'N/A'}
                     </span>
                     <span className="flex items-center gap-1 text-[10px] bg-card border border-border px-2 py-0.5 rounded text-muted-foreground">
-                      TV Series
+                      Movie
                     </span>
                   </div>
                 </div>
@@ -351,7 +349,7 @@ export const TvShows: React.FC<TvShowsProps> = ({
         </div>
       ) : (
         <div className="flex flex-col items-center justify-center py-20 text-center gap-3 bg-card/20 border border-dashed border-border rounded-2xl">
-          <Tv className="size-10 text-muted-foreground" />
+          <Film className="size-10 text-muted-foreground" />
           <h4 className="text-base font-bold text-foreground">No matches found</h4>
           <p className="text-sm text-muted-foreground max-w-sm">
             No items in the catalogue matched your active search term or selected genre.

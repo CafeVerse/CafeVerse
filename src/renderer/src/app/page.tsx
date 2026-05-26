@@ -1,26 +1,42 @@
-import React from 'react'
+import React, { useState, useEffect } from 'react'
 import { Flame, Star, Calendar, Heart, TrendingUp, ChevronRight, Play } from 'lucide-react'
 import { MediaItem } from '@/types'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useOutletContext } from 'react-router-dom'
+import { AppContextType } from './layout'
 
-interface DashboardProps {
-  featuredItem: MediaItem | null
-  recentTrending: MediaItem[]
-  getImageUrl: (path?: string) => string
-  toggleWatchlist: (item: MediaItem) => void
-  isItemInWatchlist: (item: MediaItem) => boolean
-  getSlug: (title?: string) => string
-}
-
-export const Dashboard: React.FC<DashboardProps> = ({
-  featuredItem,
-  recentTrending,
-  getImageUrl,
-  toggleWatchlist,
-  isItemInWatchlist,
-  getSlug
-}) => {
+export default function DashboardPage(): React.JSX.Element {
   const navigate = useNavigate()
+  const { getImageUrl, getSlug, toggleWatchlist, isItemInWatchlist, API_BASE_URL } =
+    useOutletContext<AppContextType>()
+
+  // API Data States
+  const [featuredItem, setFeaturedItem] = useState<MediaItem | null>(null)
+  const [recentTrending, setRecentTrending] = useState<MediaItem[]>([])
+
+  // Fetch Featured Hero item & trending items when landing on dashboard
+  useEffect(() => {
+    const loadDashboardData = async (): Promise<void> => {
+      try {
+        const resMovies = await fetch(
+          `${API_BASE_URL}/api/movies?limit=5&sort=popularity&order=desc`
+        )
+        if (resMovies.ok) {
+          const moviesData = await resMovies.json()
+          if (moviesData.data && moviesData.data.length > 0) {
+            const mapped = moviesData.data.map((m: MediaItem) => ({
+              ...m,
+              slug: m.slug || getSlug(m.title || m.name)
+            }))
+            setFeaturedItem(mapped[0])
+            setRecentTrending(mapped)
+          }
+        }
+      } catch (err) {
+        console.error('Failed to load dashboard highlights:', err)
+      }
+    }
+    loadDashboardData()
+  }, [getSlug, API_BASE_URL])
 
   return (
     <div className="space-y-10 animate-fade-in">

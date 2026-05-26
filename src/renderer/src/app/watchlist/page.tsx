@@ -1,24 +1,12 @@
 import React from 'react'
 import { HeartOff, Star, X, Bookmark } from 'lucide-react'
-import { MediaItem } from '@/types'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useOutletContext } from 'react-router-dom'
+import { AppContextType } from '../layout'
 
-interface WatchlistProps {
-  watchlist: MediaItem[]
-  setWatchlist: React.Dispatch<React.SetStateAction<MediaItem[]>>
-  toggleWatchlist: (item: MediaItem) => void
-  getImageUrl: (path?: string) => string
-  getSlug: (title?: string) => string
-}
-
-export const Watchlist: React.FC<WatchlistProps> = ({
-  watchlist,
-  setWatchlist,
-  toggleWatchlist,
-  getImageUrl,
-  getSlug
-}) => {
+export default function WatchlistPage(): React.JSX.Element {
   const navigate = useNavigate()
+  const { watchlist, setWatchlist, toggleWatchlist, getImageUrl, getSlug } =
+    useOutletContext<AppContextType>()
 
   return (
     <div className="space-y-6 animate-fade-in">
