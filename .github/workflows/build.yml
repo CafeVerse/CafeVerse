@@ -134,31 +134,21 @@ jobs:
             }
           });
 
-          if (news.length === 0) news.push("- Minor improvements and general core alignments.");
-          if (updates.length === 0) updates.push("- Subsystem and dependency refinements.");
-          if (fixes.length === 0) fixes.push("- Bug resolution and stability hardening.");
-
           const version = "${{ steps.bump.outputs.version }}";
 
-          const body = `
-          <p align="center">
-            <img src="https://img.shields.io/badge/CaféVerse -${version}-orange?style=for-the-badge" alt="CaféVerse  Release Badge" />
-          </p>
+          let body = `<p align="center">\n  <img src="https://img.shields.io/badge/CaféVerse-${version}-orange?style=for-the-badge" alt="CaféVerse Release Badge" />\n</p>\n\n## 🚀 Release Notes - ${version}\n`;
 
-          ## 🚀 Release Notes - ${version}
+          if (news.length > 0) {
+            body += `\n### ✨ New\n${news.join("\n")}\n`;
+          }
+          if (updates.length > 0) {
+            body += `\n### 🔧 Update & Improvement\n${updates.join("\n")}\n`;
+          }
+          if (fixes.length > 0) {
+            body += `\n### 🐛 Bug Fixed\n${fixes.join("\n")}\n`;
+          }
 
-          ### ✨ New
-          ${news.join("\n")}
-
-          ### 🔧 Update & Improvement
-          ${updates.join("\n")}
-
-          ### 🐛 Bug Fixed
-          ${fixes.join("\n")}
-
-          ---
-          *This is an automated production build packaged securely on GitHub Actions.*
-          `;
+          body += `\n---\n*This is an automated production build packaged securely on GitHub Actions.*`;
 
           fs.writeFileSync("release_notes.md", body.trim());
           '
