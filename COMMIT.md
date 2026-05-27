@@ -42,4 +42,10 @@ git commit -m "docs: update readme with API keys [skip ci]"
 
 ---
 
+## 🔀 Merge Commits
+
+Default Git merge commits (such as those starting with `Merge branch` or `Merge pull request`) are **automatically filtered out and ignored** by the release generator to ensure your release changelogs stay clean, professional, and free of redundant merge records.
+
+---
+
 _Standardized commit syntax guarantees perfect, professional, and zero-effort release notes generated directly from your history!_

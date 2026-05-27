@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useMemo } from 'react'
 import { Search, X, Loader2, Star, ChevronLeft, ChevronRight, Film } from 'lucide-react'
 import { MediaItem, MetaPagination } from '@/types'
 import { useNavigate, useOutletContext } from 'react-router-dom'
@@ -11,59 +11,67 @@ export default function MoviesPage(): React.JSX.Element {
 
   // Search & Filter States
   const [searchQuery, setSearchQuery] = useState('')
-  const [debouncedSearch, setDebouncedSearch] = useState('')
-  const [selectedGenre, setSelectedGenre] = useState<string>('')
+  const [selectedGenres, setSelectedGenres] = useState<string[]>([])
   const [sortBy, setSortBy] = useState<string>('created_at')
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc')
   const [currentPage, setCurrentPage] = useState<number>(1)
   const [itemsPerPage] = useState<number>(24)
 
   // API Data States
-  const [mediaList, setMediaList] = useState<MediaItem[]>([])
-  const [pagination, setPagination] = useState<MetaPagination | null>(null)
+  const [allMedia, setAllMedia] = useState<MediaItem[]>([])
   const [loading, setLoading] = useState<boolean>(true)
   const [error, setError] = useState<string | null>(null)
+  const [availableGenres, setAvailableGenres] = useState<string[]>([])
 
-  // Debouncer
+  // Fetch all movies once on mount
   useEffect(() => {
-    const handler = setTimeout(() => {
-      setDebouncedSearch(searchQuery)
-      setCurrentPage(1)
-    }, 450)
-    return () => clearTimeout(handler)
-  }, [searchQuery])
-
-  // Fetch Catalogue
-  useEffect(() => {
-    const fetchCatalogue = async (): Promise<void> => {
+    const fetchAllMovies = async (): Promise<void> => {
       setLoading(true)
       setError(null)
       try {
-        const params = new URLSearchParams()
-        params.append('page', currentPage.toString())
-        params.append('limit', itemsPerPage.toString())
-        params.append('sort', sortBy)
-        params.append('order', sortOrder)
-
-        if (debouncedSearch) {
-          params.append('search', debouncedSearch)
-        }
-        if (selectedGenre) {
-          params.append('genre', selectedGenre)
-        }
-
-        const response = await fetch(`${API_BASE_URL}/api/movies?${params.toString()}`)
+        const response = await fetch(`${API_BASE_URL}/api/movies?page=1&limit=100`)
         if (!response.ok) {
           throw new Error('Failed to load movies')
         }
 
         const result = await response.json()
-        const mapped = (result.data || []).map((m: MediaItem) => ({
+        let items: MediaItem[] = result.data || []
+
+        const meta = result.meta as MetaPagination
+        if (meta && meta.totalPages > 1) {
+          const promises: Promise<{ data?: MediaItem[] }>[] = []
+          for (let p = 2; p <= meta.totalPages; p++) {
+            promises.push(
+              fetch(`${API_BASE_URL}/api/movies?page=${p}&limit=100`).then((res) =>
+                res.ok ? res.json() : { data: [] }
+              )
+            )
+          }
+          const results = await Promise.all(promises)
+          results.forEach((res) => {
+            if (res.data) {
+              items = items.concat(res.data)
+            }
+          })
+        }
+
+        const mapped = items.map((m: MediaItem) => ({
           ...m,
           slug: m.slug || getSlug(m.title || m.name)
         }))
-        setMediaList(mapped)
-        setPagination(result.meta || null)
+
+        setAllMedia(mapped)
+
+        // Extract available genres
+        const genresSet = new Set<string>()
+        mapped.forEach((item) => {
+          if (item.genres && Array.isArray(item.genres)) {
+            item.genres.forEach((g) => {
+              if (g) genresSet.add(g)
+            })
+          }
+        })
+        setAvailableGenres(Array.from(genresSet).sort())
       } catch (err) {
         const errorMsg =
           err instanceof Error ? err.message : 'Something went wrong fetching catalogue'
@@ -73,27 +81,76 @@ export default function MoviesPage(): React.JSX.Element {
       }
     }
 
-    fetchCatalogue()
-  }, [
-    debouncedSearch,
-    selectedGenre,
-    sortBy,
-    sortOrder,
-    currentPage,
-    API_BASE_URL,
-    getSlug,
-    itemsPerPage
-  ])
+    fetchAllMovies()
+  }, [API_BASE_URL, getSlug])
 
-  const availableGenres = [
-    'Action',
-    'Adventure',
-    'Science Fiction',
-    'Comedy',
-    'Drama',
-    'Thriller',
-    'Animation'
-  ]
+  // Client-side search, filtering, sorting, and pagination
+  const filteredAndSortedMedia = useMemo(() => {
+    let result = [...allMedia]
+
+    // 1. Search Query Filter
+    if (searchQuery.trim()) {
+      const q = searchQuery.toLowerCase().trim()
+      result = result.filter(
+        (item) =>
+          (item.title || item.name || '').toLowerCase().includes(q) ||
+          (item.originalTitle || item.originalName || '').toLowerCase().includes(q) ||
+          (item.overview || '').toLowerCase().includes(q)
+      )
+    }
+
+    // 2. Multiple Genres Filter (AND match: movie must contain ALL selected genres)
+    if (selectedGenres.length > 0) {
+      result = result.filter((item) => {
+        const itemGenres = item.genres || []
+        return selectedGenres.every((sg) => itemGenres.includes(sg))
+      })
+    }
+
+    // 3. Sorting
+    result.sort((a, b) => {
+      let valA = a[sortBy as keyof MediaItem] as string | number | undefined
+      let valB = b[sortBy as keyof MediaItem] as string | number | undefined
+
+      if (valA === undefined || valA === null) valA = ''
+      if (valB === undefined || valB === null) valB = ''
+
+      if (typeof valA === 'number' && typeof valB === 'number') {
+        return sortOrder === 'asc' ? valA - valB : valB - valA
+      }
+
+      if (sortBy === 'release_date' || sortBy === 'first_air_date' || sortBy === 'created_at') {
+        const dateA = valA ? new Date(valA).getTime() : 0
+        const dateB = valB ? new Date(valB).getTime() : 0
+        return sortOrder === 'asc' ? dateA - dateB : dateB - dateA
+      }
+
+      const strA = String(valA).toLowerCase()
+      const strB = String(valB).toLowerCase()
+      return sortOrder === 'asc' ? strA.localeCompare(strB) : strB.localeCompare(strA)
+    })
+
+    return result
+  }, [allMedia, searchQuery, selectedGenres, sortBy, sortOrder])
+
+  // Derive current page media items
+  const mediaList = useMemo(() => {
+    const startIndex = (currentPage - 1) * itemsPerPage
+    return filteredAndSortedMedia.slice(startIndex, startIndex + itemsPerPage)
+  }, [filteredAndSortedMedia, currentPage, itemsPerPage])
+
+  // Derive pagination metadata
+  const pagination = useMemo<MetaPagination | null>(() => {
+    const totalItems = filteredAndSortedMedia.length
+    const totalPages = Math.ceil(totalItems / itemsPerPage)
+    return {
+      currentPage,
+      itemCount: mediaList.length,
+      itemsPerPage,
+      totalItems,
+      totalPages
+    }
+  }, [filteredAndSortedMedia.length, mediaList.length, currentPage, itemsPerPage])
 
   return (
     <div className="space-y-4 md:space-y-6 animate-fade-in">
@@ -108,12 +165,18 @@ export default function MoviesPage(): React.JSX.Element {
             type="text"
             placeholder="Search movies..."
             value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
+            onChange={(e) => {
+              setSearchQuery(e.target.value)
+              setCurrentPage(1)
+            }}
             className="w-full bg-muted/70 border border-border rounded-xl pl-10 pr-4 py-3 text-sm text-foreground placeholder-muted-foreground focus:outline-none focus:border-primary/80 focus:ring-1 focus:ring-primary/45 transition-all duration-300"
           />
           {searchQuery && (
             <button
-              onClick={() => setSearchQuery('')}
+              onClick={() => {
+                setSearchQuery('')
+                setCurrentPage(1)
+              }}
               className="absolute inset-y-0 right-0 pr-3 flex items-center text-muted-foreground hover:text-foreground cursor-pointer"
             >
               <X className="size-4" />
@@ -154,10 +217,10 @@ export default function MoviesPage(): React.JSX.Element {
             </select>
           </div>
 
-          {selectedGenre && (
+          {selectedGenres.length > 0 && (
             <button
               onClick={() => {
-                setSelectedGenre('')
+                setSelectedGenres([])
                 setCurrentPage(1)
               }}
               className="flex items-center gap-1.5 px-4 py-3 rounded-xl bg-primary/10 border border-primary/30 text-primary text-sm font-bold hover:bg-primary/25 transition-colors cursor-pointer min-h-11"
@@ -173,33 +236,38 @@ export default function MoviesPage(): React.JSX.Element {
         <span className="text-xs font-bold text-muted-foreground mr-1 shrink-0">Genres:</span>
         <button
           onClick={() => {
-            setSelectedGenre('')
+            setSelectedGenres([])
             setCurrentPage(1)
           }}
           className={`px-4 py-2 rounded-full text-xs font-semibold tracking-wide transition-all duration-300 cursor-pointer shrink-0 ${
-            !selectedGenre
+            selectedGenres.length === 0
               ? 'bg-primary text-primary-foreground shadow-md shadow-primary/20'
               : 'bg-card border border-border text-muted-foreground hover:text-foreground hover:bg-accent'
           }`}
         >
           All
         </button>
-        {availableGenres.map((genre) => (
-          <button
-            key={genre}
-            onClick={() => {
-              setSelectedGenre(genre)
-              setCurrentPage(1)
-            }}
-            className={`px-4 py-2 rounded-full text-xs font-semibold tracking-wide transition-all duration-300 cursor-pointer shrink-0 ${
-              selectedGenre === genre
-                ? 'bg-primary text-primary-foreground shadow-md shadow-primary/20 border border-transparent'
-                : 'bg-card border border-border text-muted-foreground hover:text-foreground hover:bg-accent'
-            }`}
-          >
-            {genre}
-          </button>
-        ))}
+        {availableGenres.map((genre) => {
+          const isSelected = selectedGenres.includes(genre)
+          return (
+            <button
+              key={genre}
+              onClick={() => {
+                setSelectedGenres((prev) =>
+                  prev.includes(genre) ? prev.filter((g) => g !== genre) : [...prev, genre]
+                )
+                setCurrentPage(1)
+              }}
+              className={`px-4 py-2 rounded-full text-xs font-semibold tracking-wide transition-all duration-300 cursor-pointer shrink-0 ${
+                isSelected
+                  ? 'bg-primary text-primary-foreground shadow-md shadow-primary/20 border border-transparent'
+                  : 'bg-card border border-border text-muted-foreground hover:text-foreground hover:bg-accent'
+              }`}
+            >
+              {genre}
+            </button>
+          )
+        })}
       </div>
 
       {/* CATALOG GRID BODY */}
@@ -352,12 +420,12 @@ export default function MoviesPage(): React.JSX.Element {
           <Film className="size-10 text-muted-foreground" />
           <h4 className="text-base font-bold text-foreground">No matches found</h4>
           <p className="text-sm text-muted-foreground max-w-sm">
-            No items in the catalogue matched your active search term or selected genre.
+            No items in the catalogue matched your active search term or selected genres.
           </p>
           <button
             onClick={() => {
               setSearchQuery('')
-              setSelectedGenre('')
+              setSelectedGenres([])
             }}
             className="mt-2 text-xs font-bold text-primary hover:underline cursor-pointer"
           >
