@@ -6,17 +6,22 @@ import { registerMoviesIpc } from './moviesApi'
 import { ElectronBlocker } from '@ghostery/adblocker-electron'
 import fetch from 'cross-fetch'
 
+let mainWindow: BrowserWindow
+
 function createWindow(): void {
   // Create the browser window.
-  const mainWindow = new BrowserWindow({
-    width: 900,
-    height: 670,
+  mainWindow = new BrowserWindow({
+    width: 1200,
+    height: 800,
     show: false,
     autoHideMenuBar: true,
+    frame: false, // Truly frameless
+    backgroundColor: '#0c0a09',
     icon,
     webPreferences: {
       preload: join(__dirname, '../preload/index.js'),
-      sandbox: false
+      sandbox: false,
+      contextIsolation: true
     }
   })
 
@@ -92,6 +97,23 @@ app.whenReady().then(async () => {
 
   // Register Movies IPC
   registerMoviesIpc()
+
+  // Register Window Controls IPC
+  ipcMain.on('window-minimize', () => {
+    mainWindow?.minimize()
+  })
+
+  ipcMain.on('window-maximize', () => {
+    if (mainWindow?.isMaximized()) {
+      mainWindow?.unmaximize()
+    } else {
+      mainWindow?.maximize()
+    }
+  })
+
+  ipcMain.on('window-close', () => {
+    mainWindow?.close()
+  })
 
   createWindow()
 
