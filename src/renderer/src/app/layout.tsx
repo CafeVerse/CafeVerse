@@ -9,6 +9,24 @@ import { ArrowUpCircle, RefreshCw, X, Download } from 'lucide-react'
 const TMDB_IMAGE_BASE = 'https://image.tmdb.org/t/p/original'
 const API_BASE_URL = 'https://api.movies.voidart.us'
 
+const cleanReleaseNotes = (rawNotes?: string): string => {
+  if (!rawNotes) return ''
+
+  let cleaned = rawNotes
+
+  // 1. Remove the center-aligned badge paragraph (e.g., <p align="center">...</p>)
+  cleaned = cleaned.replace(/<p\s+align="center">[\s\S]*?<\/p>/gi, '')
+
+  // 2. Remove redundant <h2> or <h1> release note titles (e.g. <h2>🚀 Release Notes...</h2>)
+  cleaned = cleaned.replace(/<h2[^>]*>[\s\S]*?<\/h2>/gi, '')
+
+  // 3. Remove HR dividers and automated build footers
+  cleaned = cleaned.replace(/<hr\s*\/?>/gi, '')
+  cleaned = cleaned.replace(/<p>\s*<em>[\s\S]*?<\/em>\s*<\/p>/gi, '')
+
+  return cleaned.trim()
+}
+
 export interface AppContextType {
   watchlist: MediaItem[]
   setWatchlist: React.Dispatch<React.SetStateAction<MediaItem[]>>
@@ -35,6 +53,7 @@ export default function RootLayout(): React.JSX.Element {
   const [downloaded, setDownloaded] = useState(false)
   const [updaterError, setUpdaterError] = useState<string | null>(null)
   const [toastDismissed, setToastDismissed] = useState(false)
+  const [currentVersion, setCurrentVersion] = useState('')
 
   // Format Helper for TMDB Images
   const getImageUrl = useCallback((path?: string): string => {
@@ -61,6 +80,10 @@ export default function RootLayout(): React.JSX.Element {
 
   // Bind Auto Updater IPC Events
   useEffect(() => {
+    if (window.api?.getAppVersion) {
+      window.api.getAppVersion().then((ver) => setCurrentVersion(ver))
+    }
+
     if (!window.api?.autoUpdater) return
 
     const unsubscribeAvailable = window.api.autoUpdater.onUpdateAvailable((info) => {
@@ -148,8 +171,8 @@ export default function RootLayout(): React.JSX.Element {
                   <span className="text-xs font-black text-white/50 tracking-[0.2em] uppercase leading-none mb-1">
                     Update Available
                   </span>
-                  <h3 className="text-sm font-black text-white leading-tight">
-                    CaféVerse v{updateInfo.version}
+                  <h3 className="text-xs sm:text-sm font-black text-white leading-tight tracking-wide">
+                    {currentVersion ? `v${currentVersion} → ` : ''}v{updateInfo.version}
                   </h3>
                 </div>
               </div>
@@ -162,10 +185,17 @@ export default function RootLayout(): React.JSX.Element {
             </div>
 
             {/* Release Notes / Description */}
-            <div className="text-xs text-muted-foreground/75 leading-relaxed bg-white/[0.01] border border-white/[0.02] rounded-xl p-3 max-h-24 overflow-y-auto scrollbar-none font-medium">
-              {updateInfo.releaseNotes ||
-                'This version includes exciting performance enhancements, library fixes, and visual UI optimizations to elevate your streaming experience.'}
-            </div>
+            {updateInfo.releaseNotes ? (
+              <div
+                className="text-xs text-muted-foreground/75 leading-relaxed bg-white/[0.01] border border-white/[0.02] rounded-xl p-3 max-h-32 overflow-y-auto scrollbar-none font-medium [&_ul]:list-disc [&_ul]:pl-4 [&_li]:mt-1 [&_h3]:font-black [&_h3]:text-white [&_h3]:uppercase [&_h3]:tracking-wider [&_h3]:mt-3 [&_h3]:first:mt-0"
+                dangerouslySetInnerHTML={{ __html: cleanReleaseNotes(updateInfo.releaseNotes) }}
+              />
+            ) : (
+              <div className="text-xs text-muted-foreground/75 leading-relaxed bg-white/[0.01] border border-white/[0.02] rounded-xl p-3 max-h-24 overflow-y-auto scrollbar-none font-medium">
+                This version includes exciting performance enhancements, library fixes, and visual
+                UI optimizations to elevate your streaming experience.
+              </div>
+            )}
 
             {/* Error Message */}
             {updaterError && (

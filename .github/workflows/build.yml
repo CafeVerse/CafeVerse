@@ -148,8 +148,6 @@ jobs:
             body += `\n### 🐛 Bug Fixed\n${fixes.join("\n")}\n`;
           }
 
-          body += `\n---\n*This is an automated production build packaged securely on GitHub Actions.*`;
-
           fs.writeFileSync("release_notes.md", body.trim());
           '
         shell: bash
