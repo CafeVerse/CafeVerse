@@ -69,7 +69,7 @@ export default function RootLayout(): React.JSX.Element {
       <Navbar watchlistCount={watchlist.length} />
       <main className="flex-1 flex flex-col h-full overflow-y-auto bg-background relative">
         <div className="absolute top-0 right-1/4 h-75 w-125 rounded-full bg-primary/5 blur-[120px]" />
-        <div className="flex-1 p-8 overflow-y-auto">
+        <div className="flex-1 overflow-y-auto">
           <Outlet
             context={{
               watchlist,

@@ -15,7 +15,6 @@ export default function MovieDetailPage(): React.JSX.Element {
   const [movie, setMovie] = useState<MediaItem | null>(null)
   const [loading, setLoading] = useState<boolean>(true)
   const [error, setError] = useState<string | null>(null)
-  const [similarMovies, setSimilarMovies] = useState<MediaItem[]>([])
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent): void => {
@@ -58,23 +57,12 @@ export default function MovieDetailPage(): React.JSX.Element {
             if (detailRes.ok) {
               const detailData = await detailRes.json()
               setMovie(detailData)
-              const others = movies.filter((m) => m.id !== detailData.id)
-              const matching = others.filter((m) =>
-                m.genres?.some((g) => detailData.genres?.includes(g))
-              )
-              setSimilarMovies([...matching, ...others].slice(0, 4))
               setLoading(false)
               return
             }
           }
           throw new Error('Movie not found in the CaféVerse database.')
         }
-
-        const others = movies.filter((m) => m.id !== matchedMovie.id)
-        const matching = others.filter((m) =>
-          m.genres?.some((g) => matchedMovie.genres?.includes(g))
-        )
-        setSimilarMovies([...matching, ...others].slice(0, 4))
 
         const detailRes = await fetch(`${API_BASE_URL}/api/movies/${matchedMovie.id}`)
         if (!detailRes.ok) {
@@ -173,156 +161,119 @@ export default function MovieDetailPage(): React.JSX.Element {
         </div>
       </div>
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-8 md:px-16 grid grid-cols-1 lg:grid-cols-12 gap-8 md:gap-12 lg:gap-16 items-start">
-        {/* Main Content Column */}
-        <div className="lg:col-span-8 space-y-8 md:space-y-12 lg:space-y-16">
-          {/* Actions & Synopsis Row */}
-          <div className="flex flex-col md:flex-row gap-6 md:gap-10">
-            {/* Left actions panel */}
-            <div className="flex flex-row md:flex-col items-center md:items-start justify-between md:justify-start gap-4 bg-card/25 border border-border p-4 md:p-5 rounded-2xl md:w-56 shrink-0">
-              <div className="space-y-1">
-                <div className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">
-                  IMDb Rating
-                </div>
-                <div className="flex items-center gap-2">
-                  <span className="text-2xl md:text-3xl font-black text-white leading-none">
-                    {movie.voteAverage?.toFixed(1) || 'N/A'}
-                  </span>
-                  <Star className="size-5 fill-primary text-primary" />
-                </div>
+      <div className="max-w-7xl mx-auto px-4 sm:px-8 md:px-16 space-y-8 md:space-y-12 lg:space-y-16">
+        {/* Actions & Synopsis Row */}
+        <div className="flex flex-col md:flex-row gap-6 md:gap-10">
+          {/* Left actions panel */}
+          <div className="flex flex-row md:flex-col items-center md:items-start justify-between md:justify-start gap-4 bg-card/25 border border-border p-4 md:p-5 rounded-2xl md:w-56 shrink-0">
+            <div className="space-y-1">
+              <div className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">
+                IMDb Rating
               </div>
-
-              <div className="flex flex-row md:flex-col gap-2.5">
-                <button
-                  onClick={() => {
-                    const playerEl = document.getElementById('cafeverse-player')
-                    playerEl?.scrollIntoView({ behavior: 'smooth' })
-                  }}
-                  className="flex items-center justify-center gap-2 bg-primary text-primary-foreground font-extrabold uppercase tracking-wider text-[10px] md:text-xs px-4 py-3 rounded-xl hover:bg-primary/95 active:scale-95 transition-all cursor-pointer min-h-11 shadow-lg shadow-primary/10 shrink-0"
-                >
-                  <Play className="size-3.5 fill-primary-foreground text-primary-foreground" />
-                  Play
-                </button>
-                <button
-                  onClick={() => toggleWatchlist(movie)}
-                  className={`flex items-center justify-center gap-2 font-extrabold uppercase tracking-wider text-[10px] md:text-xs px-4 py-3 rounded-xl border active:scale-95 transition-all cursor-pointer min-h-11 shrink-0 ${
-                    isItemInWatchlist(movie)
-                      ? 'bg-primary/10 border-primary/45 text-primary'
-                      : 'bg-muted/70 border-border text-foreground hover:bg-accent'
-                  }`}
-                >
-                  <Star
-                    className={`size-3.5 ${isItemInWatchlist(movie) ? 'fill-primary text-primary' : 'text-muted-foreground'}`}
-                  />
-                  {isItemInWatchlist(movie) ? 'Watchlisted' : 'Watchlist'}
-                </button>
+              <div className="flex items-center gap-2">
+                <span className="text-2xl md:text-3xl font-black text-white leading-none">
+                  {movie.voteAverage?.toFixed(1) || 'N/A'}
+                </span>
+                <Star className="size-5 fill-primary text-primary" />
               </div>
             </div>
 
-            {/* Storyline text */}
-            <div className="flex-1 space-y-4 md:space-y-6 text-left">
-              <h3 className="text-xl font-black uppercase tracking-widest text-foreground">
-                Storyline
-              </h3>
-              <p className="text-base sm:text-lg text-foreground/80 leading-relaxed font-medium">
-                {movie.overview || 'No description available.'}
-              </p>
-              {movie.tagline && (
-                <p className="text-sm sm:text-base font-bold italic text-primary/80">
-                  {movie.tagline}
-                </p>
-              )}
+            <div className="flex flex-row md:flex-col gap-2.5">
+              <button
+                onClick={() => {
+                  const playerEl = document.getElementById('cafeverse-player')
+                  playerEl?.scrollIntoView({ behavior: 'smooth' })
+                }}
+                className="flex items-center justify-center gap-2 bg-primary text-primary-foreground font-extrabold uppercase tracking-wider text-[10px] md:text-xs px-4 py-3 rounded-xl hover:bg-primary/95 active:scale-95 transition-all cursor-pointer min-h-11 shadow-lg shadow-primary/10 shrink-0"
+              >
+                <Play className="size-3.5 fill-primary-foreground text-primary-foreground" />
+                Play
+              </button>
+              <button
+                onClick={() => toggleWatchlist(movie)}
+                className={`flex items-center justify-center gap-2 font-extrabold uppercase tracking-wider text-[10px] md:text-xs px-4 py-3 rounded-xl border active:scale-95 transition-all cursor-pointer min-h-11 shrink-0 ${
+                  isItemInWatchlist(movie)
+                    ? 'bg-primary/10 border-primary/45 text-primary'
+                    : 'bg-muted/70 border-border text-foreground hover:bg-accent'
+                }`}
+              >
+                <Star
+                  className={`size-3.5 ${isItemInWatchlist(movie) ? 'fill-primary text-primary' : 'text-muted-foreground'}`}
+                />
+                {isItemInWatchlist(movie) ? 'Watchlisted' : 'Watchlist'}
+              </button>
             </div>
           </div>
 
-          {/* Player Embed */}
-          <div id="cafeverse-player" className="space-y-6 scroll-mt-24">
-            <h3 className="text-xl font-black uppercase tracking-widest text-foreground flex items-center gap-3">
-              <Play className="size-5 text-primary fill-primary" />
-              Now Playing
+          {/* Storyline text */}
+          <div className="flex-1 space-y-4 md:space-y-6 text-left">
+            <h3 className="text-xl font-black uppercase tracking-widest text-foreground">
+              Storyline
             </h3>
-            <div className="relative w-full bg-card aspect-video rounded-2xl overflow-hidden border border-border">
-              <iframe
-                src={`https://vaplayer.ru/embed/movie/${movie.imdbId || movie.tmdbId}?color=ffe0c2&secondaryColor=393028&title=false`}
-                className="absolute border-0 top-[-1%] left-[-1%] w-[102%] h-[102%]"
-                allowFullScreen
-                allow="fullscreen; picture-in-picture"
-                sandbox="allow-scripts allow-same-origin"
-                title={`Watch ${movie.title}`}
-              />
-            </div>
+            <p className="text-base sm:text-lg text-foreground/80 leading-relaxed font-medium">
+              {movie.overview || 'No description available.'}
+            </p>
+            {movie.tagline && (
+              <p className="text-sm sm:text-base font-bold italic text-primary/80">
+                {movie.tagline}
+              </p>
+            )}
           </div>
-
-          {/* Cast */}
-          {movie.cast && movie.cast.length > 0 && (
-            <div className="space-y-6">
-              <h3 className="text-xl font-black uppercase tracking-widest text-foreground">Cast</h3>
-              <div className="flex gap-4 sm:gap-6 overflow-x-auto pb-4 -mx-4 px-4 sm:mx-0 sm:px-0 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none]">
-                {movie.cast.map((c, i) => (
-                  <div key={i} className="flex flex-col w-32 shrink-0 gap-3">
-                    {c.profilePath ? (
-                      <div className="w-full aspect-2/3 overflow-hidden rounded-xl bg-muted">
-                        <img
-                          src={getImageUrl(c.profilePath)}
-                          alt={c.name}
-                          className="h-full w-full object-cover grayscale opacity-80 md:hover:grayscale-0 md:hover:opacity-100 transition-all duration-300"
-                        />
-                      </div>
-                    ) : (
-                      <div className="w-full aspect-2/3 bg-card flex items-center justify-center rounded-xl border border-border">
-                        <span className="text-xl font-black text-muted-foreground uppercase">
-                          {c.name.charAt(0)}
-                        </span>
-                      </div>
-                    )}
-                    <div className="flex flex-col gap-1">
-                      <span className="text-sm font-bold text-foreground leading-tight">
-                        {c.name}
-                      </span>
-                      <span className="text-xs text-muted-foreground uppercase tracking-widest line-clamp-2">
-                        {c.character}
-                      </span>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
         </div>
 
-        {/* Sidebar Column */}
-        <div className="lg:col-span-4 space-y-6">
-          <h3 className="text-xl font-black uppercase tracking-widest text-foreground">Similar</h3>
-          {similarMovies.length > 0 ? (
-            <div className="flex flex-row lg:flex-col gap-4 overflow-x-auto lg:overflow-visible pb-4 lg:pb-0 -mx-4 px-4 sm:mx-0 sm:px-0 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] scrollbar-none">
-              {similarMovies.map((sim) => (
-                <div
-                  key={sim.id}
-                  onClick={() => navigate(`/movies/${getSlug(sim.title)}`)}
-                  className="group flex flex-col lg:flex-row gap-3 lg:gap-4 shrink-0 w-36 lg:w-full bg-card/25 lg:bg-transparent border lg:border-0 border-border/60 p-2.5 lg:p-0 rounded-xl lg:rounded-none hover:bg-accent/40 lg:hover:bg-transparent cursor-pointer"
-                >
-                  <div className="w-full lg:w-24 aspect-2/3 overflow-hidden rounded-lg bg-muted shrink-0">
-                    <img
-                      src={getImageUrl(sim.posterPath)}
-                      alt={sim.title}
-                      className="h-full w-full object-cover transition-all duration-300 md:group-hover:scale-105"
-                    />
-                  </div>
-                  <div className="flex flex-col justify-center gap-1.5 lg:gap-2">
-                    <span className="text-sm lg:text-base font-bold text-white md:group-hover:text-primary transition-colors leading-tight line-clamp-2">
-                      {sim.title}
+        {/* Player Embed */}
+        <div id="cafeverse-player" className="space-y-6 scroll-mt-24">
+          <h3 className="text-xl font-black uppercase tracking-widest text-foreground flex items-center gap-3">
+            <Play className="size-5 text-primary fill-primary" />
+            Now Playing
+          </h3>
+          <div className="relative w-full h-[500px] bg-card aspect-video rounded-2xl overflow-hidden border border-border">
+            <iframe
+              src={`https://vaplayer.ru/embed/movie/${movie.imdbId || movie.tmdbId}?color=ffe0c2&secondaryColor=393028&title=false`}
+              className="absolute border-0 top-[-1%] left-[-1%] w-[102%] h-[102%]"
+              allowFullScreen
+              allow="fullscreen; picture-in-picture"
+              sandbox="allow-scripts allow-same-origin"
+              title={`Watch ${movie.title}`}
+            />
+          </div>
+        </div>
+
+        {/* Cast */}
+        {movie.cast && movie.cast.length > 0 && (
+          <div className="space-y-6">
+            <h3 className="text-xl font-black uppercase tracking-widest text-foreground">Cast</h3>
+            <div className="flex gap-4 sm:gap-6 overflow-x-auto pb-4 -mx-4 px-4 sm:mx-0 sm:px-0">
+              {movie.cast.map((c, i) => (
+                <div key={i} className="flex flex-col w-32 shrink-0 gap-3">
+                  {c.profilePath ? (
+                    <div className="w-full aspect-2/3 overflow-hidden rounded-xl bg-muted">
+                      <img
+                        src={getImageUrl(c.profilePath)}
+                        alt={c.name}
+                        className="h-full w-full object-cover grayscale opacity-80 md:hover:grayscale-0 md:hover:opacity-100 transition-all duration-300"
+                      />
+                    </div>
+                  ) : (
+                    <div className="w-full aspect-2/3 bg-card flex items-center justify-center rounded-xl border border-border">
+                      <span className="text-xl font-black text-muted-foreground uppercase">
+                        {c.name.charAt(0)}
+                      </span>
+                    </div>
+                  )}
+                  <div className="flex flex-col gap-1">
+                    <span className="text-sm font-bold text-foreground leading-tight">
+                      {c.name}
                     </span>
-                    <span className="text-[10px] lg:text-xs font-bold text-muted-foreground uppercase tracking-widest">
-                      {sim.releaseDate ? new Date(sim.releaseDate).getFullYear() : ''}
+                    <span className="text-xs text-muted-foreground uppercase tracking-widest line-clamp-2">
+                      {c.character}
                     </span>
                   </div>
                 </div>
               ))}
             </div>
-          ) : (
-            <div className="text-sm text-muted-foreground italic">No similar titles found.</div>
-          )}
-        </div>
+          </div>
+        )}
       </div>
     </div>
   )

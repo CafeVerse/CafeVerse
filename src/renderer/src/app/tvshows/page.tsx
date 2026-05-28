@@ -10,6 +10,7 @@ export default function TvShowsPage(): React.JSX.Element {
 
   // Search & Filter States
   const [searchQuery, setSearchQuery] = useState('')
+  const [debouncedSearch, setDebouncedSearch] = useState('')
   const [selectedGenres, setSelectedGenres] = useState<string[]>([])
   const [sortBy, setSortBy] = useState<string>('popularity')
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc')
@@ -21,6 +22,15 @@ export default function TvShowsPage(): React.JSX.Element {
   const [loading, setLoading] = useState<boolean>(true)
   const [error, setError] = useState<string | null>(null)
   const [availableGenres, setAvailableGenres] = useState<string[]>([])
+
+  // Debounce search query
+  useEffect(() => {
+    const handler = setTimeout(() => {
+      setDebouncedSearch(searchQuery)
+      setCurrentPage(1)
+    }, 450)
+    return () => clearTimeout(handler)
+  }, [searchQuery])
 
   // Fetch all TV shows once on mount
   useEffect(() => {
@@ -88,8 +98,8 @@ export default function TvShowsPage(): React.JSX.Element {
     let result = [...allMedia]
 
     // 1. Search Query Filter
-    if (searchQuery.trim()) {
-      const q = searchQuery.toLowerCase().trim()
+    if (debouncedSearch.trim()) {
+      const q = debouncedSearch.toLowerCase().trim()
       result = result.filter(
         (item) =>
           (item.title || item.name || '').toLowerCase().includes(q) ||
@@ -107,9 +117,18 @@ export default function TvShowsPage(): React.JSX.Element {
     }
 
     // 3. Sorting
+    const sortFieldMap: Record<string, keyof MediaItem> = {
+      popularity: 'popularity',
+      vote_average: 'voteAverage',
+      first_air_date: 'firstAirDate',
+      created_at: 'createdAt',
+      name: 'name'
+    }
+    const sortField = sortFieldMap[sortBy] || (sortBy as keyof MediaItem)
+
     result.sort((a, b) => {
-      let valA = a[sortBy as keyof MediaItem] as string | number | undefined
-      let valB = b[sortBy as keyof MediaItem] as string | number | undefined
+      let valA = a[sortField] as string | number | undefined
+      let valB = b[sortField] as string | number | undefined
 
       if (valA === undefined || valA === null) valA = ''
       if (valB === undefined || valB === null) valB = ''
@@ -118,9 +137,9 @@ export default function TvShowsPage(): React.JSX.Element {
         return sortOrder === 'asc' ? valA - valB : valB - valA
       }
 
-      if (sortBy === 'release_date' || sortBy === 'first_air_date' || sortBy === 'created_at') {
-        const dateA = valA ? new Date(valA).getTime() : 0
-        const dateB = valB ? new Date(valB).getTime() : 0
+      if (sortField === 'firstAirDate' || sortField === 'createdAt') {
+        const dateA = valA ? new Date(valA as string).getTime() : 0
+        const dateB = valB ? new Date(valB as string).getTime() : 0
         return sortOrder === 'asc' ? dateA - dateB : dateB - dateA
       }
 
@@ -130,7 +149,7 @@ export default function TvShowsPage(): React.JSX.Element {
     })
 
     return result
-  }, [allMedia, searchQuery, selectedGenres, sortBy, sortOrder])
+  }, [allMedia, debouncedSearch, selectedGenres, sortBy, sortOrder])
 
   // Derive current page media items
   const mediaList = useMemo(() => {
@@ -168,10 +187,7 @@ export default function TvShowsPage(): React.JSX.Element {
               type="text"
               placeholder="Search cinematic series..."
               value={searchQuery}
-              onChange={(e) => {
-                setSearchQuery(e.target.value)
-                setCurrentPage(1)
-              }}
+              onChange={(e) => setSearchQuery(e.target.value)}
               className="w-full bg-muted/30 hover:bg-muted/50 border border-border/50 rounded-2xl pl-12 pr-12 py-4 text-base font-medium text-foreground placeholder-muted-foreground/50 focus:outline-none focus:border-primary/50 focus:ring-4 focus:ring-primary/5 transition-all duration-500 shadow-inner"
             />
             {searchQuery && (

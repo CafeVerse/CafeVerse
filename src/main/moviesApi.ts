@@ -169,9 +169,19 @@ export function registerMoviesIpc(): void {
 
       // 3. Sorting
       if (sortBy) {
+        const sortFieldMap: Record<string, keyof MediaItem> = {
+          popularity: 'popularity',
+          vote_average: 'voteAverage',
+          release_date: 'releaseDate',
+          first_air_date: 'firstAirDate',
+          created_at: 'createdAt',
+          title: 'title'
+        }
+        const sortField = sortFieldMap[sortBy] || (sortBy as keyof MediaItem)
+
         result.sort((a, b) => {
-          let valA = a[sortBy as keyof MediaItem] as string | number | undefined
-          let valB = b[sortBy as keyof MediaItem] as string | number | undefined
+          let valA = a[sortField] as string | number | undefined
+          let valB = b[sortField] as string | number | undefined
 
           if (valA === undefined || valA === null) valA = ''
           if (valB === undefined || valB === null) valB = ''
@@ -180,7 +190,11 @@ export function registerMoviesIpc(): void {
             return sortOrder === 'asc' ? valA - valB : valB - valA
           }
 
-          if (sortBy === 'release_date' || sortBy === 'first_air_date' || sortBy === 'created_at') {
+          if (
+            sortField === 'releaseDate' ||
+            sortField === 'firstAirDate' ||
+            sortField === 'createdAt'
+          ) {
             const dateA = valA ? new Date(valA as string).getTime() : 0
             const dateB = valB ? new Date(valB as string).getTime() : 0
             return sortOrder === 'asc' ? dateA - dateB : dateB - dateA
