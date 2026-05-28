@@ -17,6 +17,7 @@ declare global {
         maximize: () => void
         close: () => void
       }
+      getAppVersion: () => Promise<string>
       autoUpdater: {
         checkForUpdates: () => void
         downloadUpdate: () => void

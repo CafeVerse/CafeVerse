@@ -116,6 +116,8 @@ app.whenReady().then(async () => {
     mainWindow?.close()
   })
 
+  ipcMain.handle('get-app-version', () => app.getVersion())
+
   createWindow()
   registerUpdater(mainWindow)
 

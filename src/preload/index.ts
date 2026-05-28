@@ -16,6 +16,7 @@ const api = {
     maximize: () => ipcRenderer.send('window-maximize'),
     close: () => ipcRenderer.send('window-close')
   },
+  getAppVersion: (): Promise<string> => ipcRenderer.invoke('get-app-version'),
   autoUpdater: {
     checkForUpdates: (): void => ipcRenderer.send('updater-check'),
     downloadUpdate: (): void => ipcRenderer.send('updater-download'),
