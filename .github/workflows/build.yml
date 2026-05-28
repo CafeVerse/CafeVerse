@@ -245,6 +245,7 @@ jobs:
             dist/*.zip
             dist/*.AppImage
             dist/*.deb
+            dist/*.yml
           retention-days: 5
 
       - name: Upload Binaries to Draft Release
@@ -257,6 +258,7 @@ jobs:
             dist/*.zip
             dist/*.AppImage
             dist/*.deb
+            dist/*.yml
             !dist/win-unpacked
             !dist/linux-unpacked
           fail_on_unmatched_files: false

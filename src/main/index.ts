@@ -5,6 +5,7 @@ import icon from '../../resources/icon.png?asset'
 import { registerMoviesIpc } from './moviesApi'
 import { ElectronBlocker } from '@ghostery/adblocker-electron'
 import fetch from 'cross-fetch'
+import { autoUpdater } from 'electron-updater'
 
 let mainWindow: BrowserWindow
 
@@ -116,6 +117,7 @@ app.whenReady().then(async () => {
   })
 
   createWindow()
+  registerUpdater(mainWindow)
 
   app.on('activate', function () {
     // On macOS it's common to re-create a window in the app when the
@@ -123,6 +125,78 @@ app.whenReady().then(async () => {
     if (BrowserWindow.getAllWindows().length === 0) createWindow()
   })
 })
+
+function registerUpdater(window: BrowserWindow): void {
+  autoUpdater.autoDownload = false
+  autoUpdater.allowPrerelease = true
+
+  if (is.dev) {
+    autoUpdater.updateConfigPath = join(__dirname, '../../dev-app-update.yml')
+    // @ts-ignore: forceDevUpdateConfig is required to test real update functionality locally
+    autoUpdater.forceDevUpdateConfig = true
+  }
+
+  // Log updater activities
+  autoUpdater.on('checking-for-update', () => {
+    console.log('[Updater] Checking for update...')
+  })
+
+  autoUpdater.on('update-available', (info) => {
+    console.log('[Updater] Update available:', info)
+    window.webContents.send('updater-available', info)
+  })
+
+  autoUpdater.on('update-not-available', () => {
+    console.log('[Updater] Update not available.')
+    window.webContents.send('updater-not-available')
+  })
+
+  autoUpdater.on('download-progress', (progressObj) => {
+    console.log('[Updater] Download progress:', progressObj)
+    window.webContents.send('updater-progress', progressObj)
+  })
+
+  autoUpdater.on('update-downloaded', (info) => {
+    console.log('[Updater] Update downloaded:', info)
+    window.webContents.send('updater-downloaded', info)
+  })
+
+  autoUpdater.on('error', (err) => {
+    console.error('[Updater] Error:', err)
+    window.webContents.send(
+      'updater-error',
+      err == null ? 'unknown' : (err.stack || err).toString()
+    )
+  })
+
+  ipcMain.on('updater-check', () => {
+    console.log('[Updater] Renderer requested update check.')
+    autoUpdater.checkForUpdates().catch((err) => {
+      console.error('[Updater] Check for updates failed:', err)
+      window.webContents.send('updater-error', err.toString())
+    })
+  })
+
+  ipcMain.on('updater-download', () => {
+    console.log('[Updater] Renderer requested update download.')
+    autoUpdater.downloadUpdate().catch((err) => {
+      console.error('[Updater] Download update failed:', err)
+      window.webContents.send('updater-error', err.toString())
+    })
+  })
+
+  ipcMain.on('updater-install', () => {
+    console.log('[Updater] Renderer requested update installation.')
+    autoUpdater.quitAndInstall()
+  })
+
+  // Start checking for updates automatically a few seconds after launch
+  setTimeout(() => {
+    autoUpdater.checkForUpdates().catch((err) => {
+      console.error('[Updater] Failed to run startup update check:', err)
+    })
+  }, 5000)
+}
 
 // Quit when all windows are closed, except on macOS. There, it's common
 // for applications and their menu bar to stay active until the user quits

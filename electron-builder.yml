@@ -52,7 +52,8 @@ deb:
   artifactName: ${productName}-${version}-linux-${arch}.${ext}
 npmRebuild: false
 publish:
-  provider: generic
-  url: https://example.com/auto-updates
+  provider: github
+  owner: VikumKarunathilake
+  repo: CafeVerse
 electronDownload:
   mirror: https://npmmirror.com/mirrors/electron/

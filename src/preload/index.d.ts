@@ -17,6 +17,16 @@ declare global {
         maximize: () => void
         close: () => void
       }
+      autoUpdater: {
+        checkForUpdates: () => void
+        downloadUpdate: () => void
+        quitAndInstall: () => void
+        onUpdateAvailable: (callback: (info: unknown) => void) => () => void
+        onUpdateNotAvailable: (callback: () => void) => () => void
+        onDownloadProgress: (callback: (progress: unknown) => void) => () => void
+        onUpdateDownloaded: (callback: (info: unknown) => void) => () => void
+        onError: (callback: (error: unknown) => void) => () => void
+      }
     }
   }
 }
