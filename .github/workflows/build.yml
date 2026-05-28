@@ -178,11 +178,11 @@ jobs:
           - platform: windows
             os: windows-latest
             arch: x64
-            build_cmd: npm run build:win -- --x64
+            build_cmd: bun run build:win -- --x64
           - platform: linux
             os: ubuntu-latest
             arch: x64
-            build_cmd: npm run build:linux -- AppImage deb --x64
+            build_cmd: bun run build:linux -- AppImage deb --x64
 
     steps:
       - name: Checkout Tagged Code
