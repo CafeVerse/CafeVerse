@@ -21,12 +21,12 @@ win:
     - target: nsis
     - target: msi
 nsis:
-  artifactName: ${productName}-${version}-windows${arch}.${ext}
+  artifactName: CafeVerse-${version}-windows${arch}.${ext}
   shortcutName: ${productName}
   uninstallDisplayName: ${productName}
   createDesktopShortcut: always
 msi:
-  artifactName: ${productName}-${version}-windows${arch}.${ext}
+  artifactName: CafeVerse-${version}-windows${arch}.${ext}
   shortcutName: ${productName}
   createDesktopShortcut: always
 mac:
@@ -39,7 +39,7 @@ mac:
     - NSDownloadsFolderUsageDescription: Application requests access to the user's Downloads folder.
   notarize: false
 dmg:
-  artifactName: ${productName}-${version}-${arch}.${ext}
+  artifactName: CafeVerse-${version}-${arch}.${ext}
 linux:
   target:
     - AppImage
@@ -47,9 +47,9 @@ linux:
   maintainer: electronjs.org
   category: Utility
 appImage:
-  artifactName: ${productName}-${version}-linux-${arch}.${ext}
+  artifactName: CafeVerse-${version}-linux-${arch}.${ext}
 deb:
-  artifactName: ${productName}-${version}-linux-${arch}.${ext}
+  artifactName: CafeVerse-${version}-linux-${arch}.${ext}
 npmRebuild: false
 publish:
   provider: github
