@@ -3,7 +3,7 @@ import { Minus, Square, X } from 'lucide-react'
 
 const Titlebar: React.FC = () => {
   return (
-    <div className="h-8 w-full flex items-center justify-between bg-[#0c0a09]/80 backdrop-blur-xl border-b border-white/[0.02] select-none relative z-50">
+    <div className="h-10 w-full flex items-center justify-between bg-[#0c0a09]/80 backdrop-blur-xl border-b border-white/[0.02] select-none relative z-50">
       {/* Draggable Area */}
       <div
         className="flex-1 h-full flex items-center px-4"
