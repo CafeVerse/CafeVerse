@@ -10,7 +10,12 @@ const api = {
     genres?: string[]
     sortBy?: string
     sortOrder?: 'asc' | 'desc'
-  }) => ipcRenderer.invoke('fetch-movies', params)
+  }) => ipcRenderer.invoke('fetch-movies', params),
+  windowControls: {
+    minimize: () => ipcRenderer.send('window-minimize'),
+    maximize: () => ipcRenderer.send('window-maximize'),
+    close: () => ipcRenderer.send('window-close')
+  }
 }
 
 // Use `contextBridge` APIs to expose Electron APIs to

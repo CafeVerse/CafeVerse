@@ -152,121 +152,137 @@ export default function TvShowsPage(): React.JSX.Element {
   }, [filteredAndSortedMedia.length, mediaList.length, currentPage, itemsPerPage])
 
   return (
-    <div className="space-y-6 animate-fade-in">
-      {/* FILTERS CONTROL PANEL */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-card/45 border border-border p-5 rounded-2xl backdrop-blur-md">
-        {/* Search query input */}
-        <div className="relative flex-1 max-w-md">
-          <span className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none">
-            <Search className="size-4 text-muted-foreground" />
-          </span>
-          <input
-            type="text"
-            placeholder="Search TV shows..."
-            value={searchQuery}
-            onChange={(e) => {
-              setSearchQuery(e.target.value)
-              setCurrentPage(1)
-            }}
-            className="w-full bg-muted/70 border border-border rounded-xl pl-10 pr-4 py-2.5 text-sm text-foreground placeholder-muted-foreground focus:outline-none focus:border-primary/80 focus:ring-1 focus:ring-primary/45 transition-all duration-300"
-          />
-          {searchQuery && (
-            <button
-              onClick={() => {
-                setSearchQuery('')
+    <div className="space-y-8 md:space-y-10 animate-fade-in pb-12">
+      {/* 1. CINEMATIC CONTROL CENTER */}
+      <div className="flex flex-col gap-6 bg-card/25 border border-border/40 p-6 sm:p-8 rounded-[2rem] backdrop-blur-3xl shadow-2xl relative overflow-hidden group">
+        {/* Ambient background glow inside the panel */}
+        <div className="absolute -top-24 -right-24 h-48 w-48 rounded-full bg-primary/5 blur-[80px] pointer-events-none group-hover:bg-primary/10 transition-colors duration-700" />
+
+        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6 relative z-10">
+          {/* Search query input */}
+          <div className="relative flex-1 max-w-2xl group/input">
+            <span className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+              <Search className="size-5 text-muted-foreground/60 group-focus-within/input:text-primary transition-colors" />
+            </span>
+            <input
+              type="text"
+              placeholder="Search cinematic series..."
+              value={searchQuery}
+              onChange={(e) => {
+                setSearchQuery(e.target.value)
                 setCurrentPage(1)
               }}
-              className="absolute inset-y-0 right-0 pr-3 flex items-center text-muted-foreground hover:text-foreground cursor-pointer"
-            >
-              <X className="size-4" />
-            </button>
-          )}
+              className="w-full bg-muted/30 hover:bg-muted/50 border border-border/50 rounded-2xl pl-12 pr-12 py-4 text-base font-medium text-foreground placeholder-muted-foreground/50 focus:outline-none focus:border-primary/50 focus:ring-4 focus:ring-primary/5 transition-all duration-500 shadow-inner"
+            />
+            {searchQuery && (
+              <button
+                onClick={() => {
+                  setSearchQuery('')
+                  setCurrentPage(1)
+                }}
+                className="absolute inset-y-0 right-0 pr-4 flex items-center text-muted-foreground hover:text-foreground cursor-pointer transition-colors"
+              >
+                <X className="size-5" />
+              </button>
+            )}
+          </div>
+
+          {/* Dropdown controls */}
+          <div className="flex flex-wrap items-center gap-4">
+            <div className="flex flex-col gap-2">
+              <label className="text-[10px] font-black text-muted-foreground/60 uppercase tracking-widest pl-1">
+                Sort By
+              </label>
+              <select
+                value={sortBy}
+                onChange={(e) => {
+                  setSortBy(e.target.value)
+                  setCurrentPage(1)
+                }}
+                className="bg-muted/40 hover:bg-muted/60 border border-border/40 rounded-xl px-5 py-3 text-sm font-bold text-foreground focus:outline-none focus:border-primary/40 focus:ring-4 focus:ring-primary/5 cursor-pointer min-h-12 transition-all appearance-none"
+              >
+                <option value="popularity">Popularity</option>
+                <option value="vote_average">User Score</option>
+                <option value="first_air_date">First Air Date</option>
+                <option value="created_at">Imported</option>
+                <option value="name">A-Z</option>
+              </select>
+            </div>
+
+            <div className="flex flex-col gap-2">
+              <label className="text-[10px] font-black text-muted-foreground/60 uppercase tracking-widest pl-1">
+                Order
+              </label>
+              <select
+                value={sortOrder}
+                onChange={(e) => {
+                  setSortOrder(e.target.value as 'asc' | 'desc')
+                  setCurrentPage(1)
+                }}
+                className="bg-muted/40 hover:bg-muted/60 border border-border/40 rounded-xl px-5 py-3 text-sm font-bold text-foreground focus:outline-none focus:border-primary/40 focus:ring-4 focus:ring-primary/5 cursor-pointer min-h-12 transition-all appearance-none"
+              >
+                <option value="desc">Descending</option>
+                <option value="asc">Ascending</option>
+              </select>
+            </div>
+          </div>
         </div>
 
-        {/* Dropdown controls */}
-        <div className="flex flex-wrap items-center gap-3">
-          <div className="flex flex-col gap-1">
-            <select
-              value={sortBy}
-              onChange={(e) => {
-                setSortBy(e.target.value)
-                setCurrentPage(1)
-              }}
-              className="bg-muted/70 border border-border rounded-xl px-4 py-2.5 text-xs text-foreground focus:outline-none focus:border-primary/80 focus:ring-1 focus:ring-primary/45 cursor-pointer"
-            >
-              <option value="popularity">Popularity</option>
-              <option value="vote_average">User Score</option>
-              <option value="first_air_date">First Air Date</option>
-              <option value="created_at">Date Imported</option>
-              <option value="name">Alphabetical</option>
-            </select>
+        {/* Genre Pill Selection - Integrated */}
+        <div className="space-y-3 relative z-10 border-t border-border/40 pt-6">
+          <div className="flex items-center justify-between">
+            <span className="text-[10px] font-black text-muted-foreground/60 uppercase tracking-[0.2em]">
+              Genre Library
+            </span>
+            {selectedGenres.length > 0 && (
+              <button
+                onClick={() => {
+                  setSelectedGenres([])
+                  setCurrentPage(1)
+                }}
+                className="text-[10px] font-black text-primary hover:text-primary/80 uppercase tracking-widest transition-colors cursor-pointer"
+              >
+                Clear Filters
+              </button>
+            )}
           </div>
-
-          <div className="flex flex-col gap-1">
-            <select
-              value={sortOrder}
-              onChange={(e) => {
-                setSortOrder(e.target.value as 'asc' | 'desc')
-                setCurrentPage(1)
-              }}
-              className="bg-muted/70 border border-border rounded-xl px-4 py-2.5 text-xs text-foreground focus:outline-none focus:border-primary/80 focus:ring-1 focus:ring-primary/45 cursor-pointer"
-            >
-              <option value="desc">Descending</option>
-              <option value="asc">Ascending</option>
-            </select>
-          </div>
-
-          {selectedGenres.length > 0 && (
+          <div className="flex flex-row items-center overflow-x-auto pb-2 gap-2.5 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] scrollbar-none">
             <button
               onClick={() => {
                 setSelectedGenres([])
                 setCurrentPage(1)
               }}
-              className="flex items-center gap-1 px-3 py-2 rounded-xl bg-primary/10 border border-primary/30 text-primary text-xs font-bold hover:bg-primary/25 transition-colors cursor-pointer"
-            >
-              Reset Genre Filter <X className="size-3" />
-            </button>
-          )}
-        </div>
-      </div>
-
-      {/* Genre Pills Row */}
-      <div className="flex flex-wrap items-center gap-2 py-1">
-        <span className="text-xs font-bold text-muted-foreground mr-2">Genres:</span>
-        <button
-          onClick={() => {
-            setSelectedGenres([])
-            setCurrentPage(1)
-          }}
-          className={`px-3.5 py-1.5 rounded-full text-xs font-semibold tracking-wide transition-all duration-300 cursor-pointer ${
-            selectedGenres.length === 0
-              ? 'bg-primary text-primary-foreground shadow-md shadow-primary/20'
-              : 'bg-card border border-border text-muted-foreground hover:text-foreground hover:bg-accent'
-          }`}
-        >
-          All
-        </button>
-        {availableGenres.map((genre) => {
-          const isSelected = selectedGenres.includes(genre)
-          return (
-            <button
-              key={genre}
-              onClick={() => {
-                setSelectedGenres((prev) =>
-                  prev.includes(genre) ? prev.filter((g) => g !== genre) : [...prev, genre]
-                )
-                setCurrentPage(1)
-              }}
-              className={`px-3.5 py-1.5 rounded-full text-xs font-semibold tracking-wide transition-all duration-300 cursor-pointer ${
-                isSelected
-                  ? 'bg-primary text-primary-foreground shadow-md shadow-primary/20 border border-transparent'
-                  : 'bg-card border border-border text-muted-foreground hover:text-foreground hover:bg-accent'
+              className={`px-5 py-2.5 rounded-xl text-xs font-black tracking-widest uppercase transition-all duration-300 cursor-pointer shrink-0 border ${
+                selectedGenres.length === 0
+                  ? 'bg-primary text-primary-foreground border-primary shadow-lg shadow-primary/20'
+                  : 'bg-muted/30 border-border/40 text-muted-foreground hover:text-foreground hover:bg-muted/50 hover:border-border/60'
               }`}
             >
-              {genre}
+              All Genres
             </button>
-          )
-        })}
+            {availableGenres.map((genre) => {
+              const isSelected = selectedGenres.includes(genre)
+              return (
+                <button
+                  key={genre}
+                  onClick={() => {
+                    setSelectedGenres((prev) =>
+                      prev.includes(genre) ? prev.filter((g) => g !== genre) : [...prev, genre]
+                    )
+                    setCurrentPage(1)
+                  }}
+                  className={`px-5 py-2.5 rounded-xl text-xs font-black tracking-widest uppercase transition-all duration-300 cursor-pointer shrink-0 border ${
+                    isSelected
+                      ? 'bg-primary text-primary-foreground border-primary shadow-lg shadow-primary/20'
+                      : 'bg-muted/30 border-border/40 text-muted-foreground hover:text-foreground hover:bg-muted/50 hover:border-border/60'
+                  }`}
+                >
+                  {genre}
+                </button>
+              )
+            })}
+          </div>
+        </div>
       </div>
 
       {/* CATALOG GRID BODY */}

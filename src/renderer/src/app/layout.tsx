@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react'
 import { Outlet } from 'react-router-dom'
 import Navbar from '@/components/navbar'
+import Titlebar from '@/components/titlebar'
 import { MediaItem } from '@/types'
 
 const TMDB_IMAGE_BASE = 'https://image.tmdb.org/t/p/original'
@@ -63,30 +64,35 @@ export default function RootLayout(): React.JSX.Element {
   }
 
   return (
-    <div className="flex h-screen w-screen overflow-hidden bg-background font-sans text-foreground antialiased selection:bg-primary selection:text-primary-foreground">
-      {/* 1. GLASSMORPHIC OBISIDAN SIDEBAR */}
-      <Navbar watchlistCount={watchlist.length} />
+    <div className="flex flex-col h-screen w-screen overflow-hidden bg-background font-sans text-foreground antialiased selection:bg-primary selection:text-primary-foreground">
+      {/* 0. CUSTOM TITLEBAR */}
+      <Titlebar />
 
-      {/* MAIN CONTENT AREA */}
-      <main className="flex-1 flex flex-col h-full overflow-y-auto bg-background relative">
-        {/* Glow backdrop behind header */}
-        <div className="absolute top-0 right-1/4 h-75 w-125 rounded-full bg-primary/5 blur-[120px]" />
+      <div className="flex flex-1 h-full w-full overflow-hidden">
+        {/* 1. GLASSMORPHIC OBISIDAN SIDEBAR */}
+        <Navbar watchlistCount={watchlist.length} />
 
-        {/* CONTAINER CONTENT */}
-        <div className="flex-1 p-8 overflow-y-auto">
-          <Outlet
-            context={{
-              watchlist,
-              setWatchlist,
-              getImageUrl,
-              getSlug,
-              toggleWatchlist,
-              isItemInWatchlist,
-              API_BASE_URL
-            }}
-          />
-        </div>
-      </main>
+        {/* MAIN CONTENT AREA */}
+        <main className="flex-1 flex flex-col h-full overflow-y-auto bg-background relative">
+          {/* Glow backdrop behind header */}
+          <div className="absolute top-0 right-1/4 h-75 w-125 rounded-full bg-primary/5 blur-[120px]" />
+
+          {/* CONTAINER CONTENT */}
+          <div className="flex-1 p-8 overflow-y-auto">
+            <Outlet
+              context={{
+                watchlist,
+                setWatchlist,
+                getImageUrl,
+                getSlug,
+                toggleWatchlist,
+                isItemInWatchlist,
+                API_BASE_URL
+              }}
+            />
+          </div>
+        </main>
+      </div>
     </div>
   )
 }

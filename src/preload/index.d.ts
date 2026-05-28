@@ -12,6 +12,11 @@ declare global {
         sortBy?: string
         sortOrder?: 'asc' | 'desc'
       }) => Promise<unknown>
+      windowControls: {
+        minimize: () => void
+        maximize: () => void
+        close: () => void
+      }
     }
   }
 }
