@@ -1,10 +1,11 @@
 import React, { useState, useEffect, useMemo } from 'react'
 import { Search, X, Loader2, Star, ChevronLeft, ChevronRight, Tv } from 'lucide-react'
 import { MediaItem, MetaPagination } from '@/types'
-import { useOutletContext } from 'react-router-dom'
+import { useOutletContext, useNavigate } from 'react-router-dom'
 import { AppContextType } from '../layout'
 
 export default function TvShowsPage(): React.JSX.Element {
+  const navigate = useNavigate()
   const { API_BASE_URL, getImageUrl, isItemInWatchlist, getSlug } =
     useOutletContext<AppContextType>()
 
@@ -322,7 +323,8 @@ export default function TvShowsPage(): React.JSX.Element {
             {mediaList.map((item) => (
               <div
                 key={item.id}
-                className="group flex flex-col gap-3 rounded-2xl bg-card/40 border border-border p-3 transition-all duration-300 hover:bg-accent/60 hover:-translate-y-1.5 hover:shadow-2xl"
+                onClick={() => navigate(`/tvshows/${item.slug || getSlug(item.title || item.name)}`)}
+                className="group flex flex-col gap-3 rounded-2xl bg-card/40 border border-border p-3 transition-all duration-300 hover:bg-accent/60 hover:-translate-y-1.5 hover:shadow-2xl cursor-pointer"
               >
                 <div className="relative aspect-2/3 overflow-hidden rounded-xl bg-muted">
                   <img
