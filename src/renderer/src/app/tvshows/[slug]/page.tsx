@@ -273,8 +273,8 @@ export default function TvShowDetailPage(): React.JSX.Element {
             <div className="flex flex-row md:flex-col gap-2.5">
               <button
                 onClick={() => {
-                  const playerEl = document.getElementById('cafeverse-player')
-                  playerEl?.scrollIntoView({ behavior: 'smooth' })
+                  const code = `S${String(activeSeason).padStart(2, '0')}E${String(activeEpisode).padStart(2, '0')}`
+                  navigate(`/tvshows/${slug}/${code}`)
                 }}
                 className="flex items-center justify-center gap-2 bg-primary text-primary-foreground font-extrabold uppercase tracking-wider text-[10px] md:text-xs px-4 py-3 rounded-xl hover:bg-primary/95 active:scale-95 transition-all cursor-pointer min-h-11 shadow-lg shadow-primary/10 shrink-0"
               >
@@ -321,11 +321,10 @@ export default function TvShowDetailPage(): React.JSX.Element {
           </h3>
           <div className="relative w-full h-125 bg-card aspect-video rounded-2xl overflow-hidden border border-border">
             <iframe
-              src={`https://vaplayer.ru/embed/tv/${show.imdbId || show.tmdbId}/${activeSeason}/${activeEpisode}?color=ebd29f&secondaryColor=2e2e2e&title=false`}
+              src={`https://vaplayer.ru/embed/tv/${show.imdbId}/${activeSeason}/${activeEpisode}?color=ebd29f&secondaryColor=2e2e2e&title=false`}
               className="absolute border-0 top-[-1%] left-[-1%] w-[102%] h-[102%]"
               allowFullScreen
               allow="fullscreen; picture-in-picture"
-              sandbox="allow-scripts allow-same-origin"
               title={`Watch ${show.title || show.name} S${activeSeason}E${activeEpisode}`}
             />
           </div>
@@ -390,8 +389,8 @@ export default function TvShowDetailPage(): React.JSX.Element {
                         key={ep.id}
                         onClick={() => {
                           setActiveEpisode(ep.episodeNumber)
-                          const playerEl = document.getElementById('cafeverse-player')
-                          playerEl?.scrollIntoView({ behavior: 'smooth' })
+                          const code = `S${String(activeSeason).padStart(2, '0')}E${String(ep.episodeNumber).padStart(2, '0')}`
+                          navigate(`/tvshows/${slug}/${code}`)
                         }}
                         className={`flex flex-col items-center justify-center p-3 rounded-xl border text-center transition-all cursor-pointer ${
                           isActive
@@ -464,8 +463,8 @@ export default function TvShowDetailPage(): React.JSX.Element {
                       key={epNum}
                       onClick={() => {
                         setActiveEpisode(epNum)
-                        const playerEl = document.getElementById('cafeverse-player')
-                        playerEl?.scrollIntoView({ behavior: 'smooth' })
+                        const code = `S${String(activeSeason).padStart(2, '0')}E${String(epNum).padStart(2, '0')}`
+                        navigate(`/tvshows/${slug}/${code}`)
                       }}
                       className={`flex flex-col items-center justify-center p-3 rounded-xl border text-center transition-all cursor-pointer ${
                         isActive

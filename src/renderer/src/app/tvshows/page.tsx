@@ -13,10 +13,10 @@ export default function TvShowsPage(): React.JSX.Element {
   const [searchQuery, setSearchQuery] = useState('')
   const [debouncedSearch, setDebouncedSearch] = useState('')
   const [selectedGenres, setSelectedGenres] = useState<string[]>([])
-  const [sortBy, setSortBy] = useState<string>('popularity')
+  const [sortBy, setSortBy] = useState<string>('createdAt')
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc')
   const [currentPage, setCurrentPage] = useState<number>(1)
-  const [itemsPerPage] = useState<number>(12)
+  const [itemsPerPage] = useState<number>(24)
 
   // API Data States
   const [allMedia, setAllMedia] = useState<MediaItem[]>([])
