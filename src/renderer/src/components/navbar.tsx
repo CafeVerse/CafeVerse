@@ -194,6 +194,12 @@ const SidebarContent: React.FC<SidebarContentProps> = ({ watchlistCount, setOpen
             count={watchlistCount}
             onClick={() => setOpen(false)}
           />
+          <MobileNavItem
+            to="/history"
+            icon={History}
+            label="Watch History"
+            onClick={() => setOpen(false)}
+          />
         </div>
       </div>
     </nav>
@@ -248,6 +254,7 @@ export const Navbar: React.FC<NavbarProps> = ({ watchlistCount, updateAvailable 
             label="Watchlist"
             count={watchlistCount}
           />
+          <DesktopNavItem to="/history" icon={History} label="History" />
         </nav>
 
         {/* Actions / Utility container */}
@@ -302,9 +309,14 @@ export const Navbar: React.FC<NavbarProps> = ({ watchlistCount, updateAvailable 
                     <Heart className="size-4 text-primary" />
                     <span>Favorites</span>
                   </DropdownMenuItem>
-                  <DropdownMenuItem className="cursor-pointer gap-2.5 rounded-lg px-2.5 py-2 text-xs font-bold text-muted-foreground transition-colors">
-                    <History className="size-4 text-primary" />
-                    <span>Watch History</span>
+                  <DropdownMenuItem
+                    asChild
+                    className="cursor-pointer gap-2.5 rounded-lg px-2.5 py-2 text-xs font-bold text-muted-foreground transition-colors"
+                  >
+                    <NavLink to="/history" className="flex w-full items-center gap-2.5">
+                      <History className="size-4 text-primary" />
+                      <span>Watch History</span>
+                    </NavLink>
                   </DropdownMenuItem>
                   <DropdownMenuItem className="cursor-pointer gap-2.5 rounded-lg px-2.5 py-2 text-xs font-bold text-muted-foreground transition-colors">
                     <Settings className="size-4 text-primary" />

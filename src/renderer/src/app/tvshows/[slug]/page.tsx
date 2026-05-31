@@ -28,8 +28,14 @@ interface SeasonDetails {
 export default function TvShowDetailPage(): React.JSX.Element {
   const { slug } = useParams<{ slug: string }>()
   const navigate = useNavigate()
-  const { API_BASE_URL, getImageUrl, toggleWatchlist, isItemInWatchlist, getSlug } =
-    useOutletContext<AppContextType>()
+  const {
+    API_BASE_URL,
+    getImageUrl,
+    toggleWatchlist,
+    isItemInWatchlist,
+    getSlug,
+    addToWatchHistory
+  } = useOutletContext<AppContextType>()
 
   const [show, setShow] = useState<MediaItem | null>(null)
   const [loading, setLoading] = useState<boolean>(true)
@@ -153,6 +159,12 @@ export default function TvShowDetailPage(): React.JSX.Element {
       window.api?.discord?.clearActivity()
     }
   }, [show, activeSeason, activeEpisode, getImageUrl])
+
+  useEffect(() => {
+    if (show) {
+      addToWatchHistory(show, activeSeason, activeEpisode)
+    }
+  }, [show, activeSeason, activeEpisode, addToWatchHistory])
 
   if (loading) {
     return (

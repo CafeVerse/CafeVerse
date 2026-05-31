@@ -9,8 +9,14 @@ import { AppContextType } from '../../layout'
 export default function MovieDetailPage(): React.JSX.Element {
   const { slug } = useParams<{ slug: string }>()
   const navigate = useNavigate()
-  const { API_BASE_URL, getImageUrl, toggleWatchlist, isItemInWatchlist, getSlug } =
-    useOutletContext<AppContextType>()
+  const {
+    API_BASE_URL,
+    getImageUrl,
+    toggleWatchlist,
+    isItemInWatchlist,
+    getSlug,
+    addToWatchHistory
+  } = useOutletContext<AppContextType>()
 
   const [movie, setMovie] = useState<MediaItem | null>(null)
   const [loading, setLoading] = useState<boolean>(true)
@@ -102,6 +108,12 @@ export default function MovieDetailPage(): React.JSX.Element {
       window.api?.discord?.clearActivity()
     }
   }, [movie, getImageUrl])
+
+  useEffect(() => {
+    if (movie) {
+      addToWatchHistory(movie)
+    }
+  }, [movie, addToWatchHistory])
 
   if (loading) {
     return (

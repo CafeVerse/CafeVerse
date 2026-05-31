@@ -24,6 +24,10 @@ export interface AppContextType {
   updaterError: string | null
   currentVersion: string
   cleanReleaseNotes: (rawNotes?: string) => string
+  watchHistory: MediaItem[]
+  addToWatchHistory: (item: MediaItem, season?: number, episode?: number) => void
+  removeFromWatchHistory: (itemId: number, contentType: string) => void
+  clearWatchHistory: () => void
 }
 
 export default function RootLayout(): React.JSX.Element {
@@ -34,6 +38,17 @@ export default function RootLayout(): React.JSX.Element {
       return saved ? JSON.parse(saved) : []
     } catch (e) {
       console.error('Failed to parse watchlist from localStorage:', e)
+      return []
+    }
+  })
+
+  // Watch History State (Persisted locally in localStorage with error protection)
+  const [watchHistory, setWatchHistory] = useState<MediaItem[]>(() => {
+    try {
+      const saved = localStorage.getItem('cafeverse_watch_history')
+      return saved ? JSON.parse(saved) : []
+    } catch (e) {
+      console.error('Failed to parse watch history from localStorage:', e)
       return []
     }
   })
@@ -74,6 +89,15 @@ export default function RootLayout(): React.JSX.Element {
       console.error('Failed to save watchlist to localStorage:', e)
     }
   }, [watchlist])
+
+  // Sync Watch History with localStorage with error boundary protection
+  useEffect(() => {
+    try {
+      localStorage.setItem('cafeverse_watch_history', JSON.stringify(watchHistory))
+    } catch (e) {
+      console.error('Failed to save watch history to localStorage:', e)
+    }
+  }, [watchHistory])
 
   // Bind Auto Updater IPC Events with robust lifecycle and error timeout cleanup
   useEffect(() => {
@@ -134,6 +158,36 @@ export default function RootLayout(): React.JSX.Element {
     return watchlist.some((w) => w.id === item.id && w.contentType === item.contentType)
   }
 
+  // Watch History Actions
+  const addToWatchHistory = useCallback(
+    (item: MediaItem, season?: number, episode?: number): void => {
+      setWatchHistory((prev) => {
+        const filtered = prev.filter(
+          (historyItem) =>
+            !(historyItem.id === item.id && historyItem.contentType === item.contentType)
+        )
+        const record = {
+          ...item,
+          watchedAt: new Date().toISOString(),
+          activeSeason: season,
+          activeEpisode: episode
+        }
+        return [record, ...filtered].slice(0, 50)
+      })
+    },
+    []
+  )
+
+  const removeFromWatchHistory = useCallback((itemId: number, contentType: string): void => {
+    setWatchHistory((prev) =>
+      prev.filter((item) => !(item.id === itemId && item.contentType === contentType))
+    )
+  }, [])
+
+  const clearWatchHistory = useCallback((): void => {
+    setWatchHistory([])
+  }, [])
+
   return (
     <AuthProvider>
       <div className="flex flex-col h-screen w-screen overflow-hidden bg-background font-sans text-foreground antialiased selection:bg-primary selection:text-primary-foreground">
@@ -156,7 +210,11 @@ export default function RootLayout(): React.JSX.Element {
                 downloaded,
                 updaterError,
                 currentVersion,
-                cleanReleaseNotes
+                cleanReleaseNotes,
+                watchHistory,
+                addToWatchHistory,
+                removeFromWatchHistory,
+                clearWatchHistory
               }}
             />
           </div>

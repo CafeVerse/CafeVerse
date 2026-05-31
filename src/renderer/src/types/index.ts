@@ -56,6 +56,9 @@ export interface MediaItem {
   cast?: CastMember[]
   slug?: string
   seasons?: SeasonMeta[]
+  watchedAt?: string
+  activeSeason?: number
+  activeEpisode?: number
 }
 
 export interface MetaPagination {
