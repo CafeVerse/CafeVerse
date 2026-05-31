@@ -1,5 +1,7 @@
 import React, { useState } from 'react'
 import { NavLink } from 'react-router-dom'
+import { useAuth } from '@/context/auth-context'
+
 import {
   Layers,
   Film,
@@ -206,8 +208,14 @@ const SidebarContent: React.FC<SidebarContentProps> = ({ watchlistCount, setOpen
   </div>
 )
 
+const getInitials = (name?: string) => {
+  if (!name) return 'U'
+  return name.slice(0, 2).toUpperCase()
+}
+
 export const Navbar: React.FC<NavbarProps> = ({ watchlistCount, updateAvailable }) => {
   const [open, setOpen] = useState(false)
+  const { isAuthenticated, user, logout } = useAuth()
 
   return (
     <header className="h-16 w-full shrink-0 flex items-center justify-between px-8 bg-[#0c0a09] border-b border-white/3 relative z-40 select-none">
@@ -254,66 +262,77 @@ export const Navbar: React.FC<NavbarProps> = ({ watchlistCount, updateAvailable 
             </NavLink>
           )}
 
-          {/* Profile Dropdown */}
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <button className="flex items-center justify-center rounded-full border border-border/40 hover:border-primary/20 bg-muted/40 p-0.5 transition-colors cursor-pointer outline-hidden focus-visible:ring-1 focus-visible:ring-primary size-9">
-                <Avatar size="default" className="size-8">
-                  <AvatarImage
-                    src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=100&q=80"
-                    alt="Profile"
-                  />
-                  <AvatarFallback className="bg-primary/10 text-primary font-bold text-xs">
-                    VK
-                  </AvatarFallback>
-                </Avatar>
-              </button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent
-              align="end"
-              className="w-56 mt-2 bg-popover border border-border/40 text-popover-foreground rounded-xl shadow-lg"
-            >
-              <DropdownMenuLabel className="font-normal p-3">
-                <div className="flex flex-col space-y-1">
-                  <p className="text-sm font-black tracking-tight text-foreground leading-none">
-                    Vikum Karunathilake
-                  </p>
-                  <p className="text-xs text-muted-foreground/60 leading-none truncate">
-                    vikum@cafeverse.app
-                  </p>
+          {/* Profile Dropdown / Sign In CTA */}
+          {isAuthenticated ? (
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <button className="flex items-center justify-center rounded-full border border-border/40 hover:border-primary/20 bg-muted/40 p-0.5 transition-colors cursor-pointer outline-hidden focus-visible:ring-1 focus-visible:ring-primary size-9">
+                  <Avatar size="default" className="size-8">
+                    <AvatarImage
+                      src={`https://api.dicebear.com/7.x/bottts/svg?seed=${user?.username || 'user'}`}
+                      alt={user?.username || 'User'}
+                    />
+                    <AvatarFallback className="bg-primary/10 text-primary font-bold text-xs">
+                      {getInitials(user?.username)}
+                    </AvatarFallback>
+                  </Avatar>
+                </button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent
+                align="end"
+                className="w-56 mt-2 bg-popover border border-border/40 text-popover-foreground rounded-xl shadow-lg"
+              >
+                <DropdownMenuLabel className="font-normal p-3">
+                  <div className="flex flex-col space-y-1">
+                    <p className="text-sm font-black tracking-tight text-foreground leading-none">
+                      {user?.username}
+                    </p>
+                    <p className="text-xs text-muted-foreground/60 leading-none truncate">
+                      {user?.email}
+                    </p>
+                  </div>
+                </DropdownMenuLabel>
+                <DropdownMenuSeparator className="bg-border/30" />
+                <DropdownMenuGroup className="p-1">
+                  <DropdownMenuItem className="cursor-pointer gap-2.5 rounded-lg px-2.5 py-2 text-xs font-bold text-muted-foreground transition-colors">
+                    <User className="size-4 text-primary" />
+                    <span>My Profile</span>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem className="cursor-pointer gap-2.5 rounded-lg px-2.5 py-2 text-xs font-bold text-muted-foreground transition-colors">
+                    <Heart className="size-4 text-primary" />
+                    <span>Favorites</span>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem className="cursor-pointer gap-2.5 rounded-lg px-2.5 py-2 text-xs font-bold text-muted-foreground transition-colors">
+                    <History className="size-4 text-primary" />
+                    <span>Watch History</span>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem className="cursor-pointer gap-2.5 rounded-lg px-2.5 py-2 text-xs font-bold text-muted-foreground transition-colors">
+                    <Settings className="size-4 text-primary" />
+                    <span>Settings</span>
+                  </DropdownMenuItem>
+                </DropdownMenuGroup>
+                <DropdownMenuSeparator className="bg-border/30" />
+                <div className="p-1">
+                  <DropdownMenuItem
+                    variant="destructive"
+                    onClick={logout}
+                    className="cursor-pointer gap-2.5 rounded-lg px-2.5 py-2 text-xs font-bold text-destructive hover:bg-destructive/10 transition-colors"
+                  >
+                    <LogOut className="size-4" />
+                    <span>Log out</span>
+                  </DropdownMenuItem>
                 </div>
-              </DropdownMenuLabel>
-              <DropdownMenuSeparator className="bg-border/30" />
-              <DropdownMenuGroup className="p-1">
-                <DropdownMenuItem className="cursor-pointer gap-2.5 rounded-lg px-2.5 py-2 text-xs font-bold text-muted-foreground transition-colors">
-                  <User className="size-4 text-primary" />
-                  <span>My Profile</span>
-                </DropdownMenuItem>
-                <DropdownMenuItem className="cursor-pointer gap-2.5 rounded-lg px-2.5 py-2 text-xs font-bold text-muted-foreground transition-colors">
-                  <Heart className="size-4 text-primary" />
-                  <span>Favorites</span>
-                </DropdownMenuItem>
-                <DropdownMenuItem className="cursor-pointer gap-2.5 rounded-lg px-2.5 py-2 text-xs font-bold text-muted-foreground transition-colors">
-                  <History className="size-4 text-primary" />
-                  <span>Watch History</span>
-                </DropdownMenuItem>
-                <DropdownMenuItem className="cursor-pointer gap-2.5 rounded-lg px-2.5 py-2 text-xs font-bold text-muted-foreground transition-colors">
-                  <Settings className="size-4 text-primary" />
-                  <span>Settings</span>
-                </DropdownMenuItem>
-              </DropdownMenuGroup>
-              <DropdownMenuSeparator className="bg-border/30" />
-              <div className="p-1">
-                <DropdownMenuItem
-                  variant="destructive"
-                  className="cursor-pointer gap-2.5 rounded-lg px-2.5 py-2 text-xs font-bold text-destructive hover:bg-destructive/10 transition-colors"
-                >
-                  <LogOut className="size-4" />
-                  <span>Log out</span>
-                </DropdownMenuItem>
-              </div>
-            </DropdownMenuContent>
-          </DropdownMenu>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          ) : (
+            <NavLink
+              to="/login"
+              className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold text-primary bg-primary/6 border border-primary/20 rounded-xl hover:bg-primary/10 transition-colors shrink-0 cursor-pointer"
+            >
+              <User className="size-4" />
+              <span className="tracking-tight font-extrabold">Sign In</span>
+            </NavLink>
+          )}
 
           <div className="md:hidden flex items-center">
             <Sheet open={open} onOpenChange={setOpen}>

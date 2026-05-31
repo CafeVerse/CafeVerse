@@ -4,6 +4,7 @@ import Navbar from '@/components/navbar'
 import Titlebar from '@/components/titlebar'
 import { MediaItem } from '@/types'
 import { cleanReleaseNotes } from '@/lib/utils'
+import { AuthProvider } from '@/context/auth-context'
 
 const TMDB_IMAGE_BASE = 'https://image.tmdb.org/t/p/original'
 const API_BASE_URL = 'https://movies-api-silk-phi.vercel.app'
@@ -134,31 +135,33 @@ export default function RootLayout(): React.JSX.Element {
   }
 
   return (
-    <div className="flex flex-col h-screen w-screen overflow-hidden bg-background font-sans text-foreground antialiased selection:bg-primary selection:text-primary-foreground">
-      <Titlebar />
-      <Navbar watchlistCount={watchlist.length} updateAvailable={!!updateInfo} />
-      <main className="flex-1 flex flex-col min-h-0 bg-background relative">
-        <div className="flex-1 overflow-y-auto">
-          <Outlet
-            context={{
-              watchlist,
-              setWatchlist,
-              getImageUrl,
-              getSlug,
-              toggleWatchlist,
-              isItemInWatchlist,
-              API_BASE_URL,
-              updateInfo,
-              downloading,
-              downloadProgress,
-              downloaded,
-              updaterError,
-              currentVersion,
-              cleanReleaseNotes
-            }}
-          />
-        </div>
-      </main>
-    </div>
+    <AuthProvider>
+      <div className="flex flex-col h-screen w-screen overflow-hidden bg-background font-sans text-foreground antialiased selection:bg-primary selection:text-primary-foreground">
+        <Titlebar />
+        <Navbar watchlistCount={watchlist.length} updateAvailable={!!updateInfo} />
+        <main className="flex-1 flex flex-col min-h-0 bg-background relative">
+          <div className="flex-1 overflow-y-auto">
+            <Outlet
+              context={{
+                watchlist,
+                setWatchlist,
+                getImageUrl,
+                getSlug,
+                toggleWatchlist,
+                isItemInWatchlist,
+                API_BASE_URL,
+                updateInfo,
+                downloading,
+                downloadProgress,
+                downloaded,
+                updaterError,
+                currentVersion,
+                cleanReleaseNotes
+              }}
+            />
+          </div>
+        </main>
+      </div>
+    </AuthProvider>
   )
 }
