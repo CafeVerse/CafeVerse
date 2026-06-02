@@ -2,7 +2,6 @@ import { app, BrowserWindow, ipcMain, session } from 'electron'
 import { join } from 'path'
 import { electronApp, optimizer, is } from '@electron-toolkit/utils'
 import icon from '../../resources/icon.png?asset'
-import { registerMoviesIpc } from './moviesApi'
 import { ElectronBlocker } from '@ghostery/adblocker-electron'
 import fetch from 'cross-fetch'
 import { autoUpdater } from 'electron-updater'
@@ -101,9 +100,6 @@ app.whenReady().then(async () => {
 
   // IPC test
   ipcMain.on('ping', () => console.log('pong'))
-
-  // Register Movies IPC
-  registerMoviesIpc()
 
   // Register Discord RPC IPC
   ipcMain.on('discord-update-activity', (_event, activity) => {
