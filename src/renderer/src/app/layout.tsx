@@ -7,7 +7,7 @@ import { cleanReleaseNotes } from '@/lib/utils'
 import { AuthProvider } from '@/context/auth-context'
 
 const TMDB_IMAGE_BASE = 'https://image.tmdb.org/t/p/original'
-const API_BASE_URL = 'https://movies-api-silk-phi.vercel.app'
+const API_BASE_URL = 'https://cafeverce-api.vercel.app/'
 
 export interface AppContextType {
   watchlist: MediaItem[]
@@ -31,28 +31,6 @@ export interface AppContextType {
 }
 
 export default function RootLayout(): React.JSX.Element {
-  // Watchlist State (Persisted locally in localStorage with error protection)
-  const [watchlist, setWatchlist] = useState<MediaItem[]>(() => {
-    try {
-      const saved = localStorage.getItem('cafeverse_watchlist')
-      return saved ? JSON.parse(saved) : []
-    } catch (e) {
-      console.error('Failed to parse watchlist from localStorage:', e)
-      return []
-    }
-  })
-
-  // Watch History State (Persisted locally in localStorage with error protection)
-  const [watchHistory, setWatchHistory] = useState<MediaItem[]>(() => {
-    try {
-      const saved = localStorage.getItem('cafeverse_watch_history')
-      return saved ? JSON.parse(saved) : []
-    } catch (e) {
-      console.error('Failed to parse watch history from localStorage:', e)
-      return []
-    }
-  })
-
   // Auto Updater State
   const [updateInfo, setUpdateInfo] = useState<{ version: string; releaseNotes?: string } | null>(
     null
@@ -69,35 +47,6 @@ export default function RootLayout(): React.JSX.Element {
     const cleanPath = path.startsWith('/') ? path : `/${path}`
     return `${TMDB_IMAGE_BASE}${cleanPath}`
   }, [])
-
-  // Helper to generate a clean, URL-friendly slug from title or name
-  const getSlug = useCallback((title?: string): string => {
-    if (!title) return ''
-    return title
-      .toLowerCase()
-      .replace(/[^\w\s-]/g, '') // remove special characters
-      .replace(/\s+/g, '-') // replace spaces with hyphens
-      .replace(/--+/g, '-') // replace multiple hyphens
-      .trim()
-  }, [])
-
-  // Sync Watchlist with localStorage with error boundary protection
-  useEffect(() => {
-    try {
-      localStorage.setItem('cafeverse_watchlist', JSON.stringify(watchlist))
-    } catch (e) {
-      console.error('Failed to save watchlist to localStorage:', e)
-    }
-  }, [watchlist])
-
-  // Sync Watch History with localStorage with error boundary protection
-  useEffect(() => {
-    try {
-      localStorage.setItem('cafeverse_watch_history', JSON.stringify(watchHistory))
-    } catch (e) {
-      console.error('Failed to save watch history to localStorage:', e)
-    }
-  }, [watchHistory])
 
   // Bind Auto Updater IPC Events with robust lifecycle and error timeout cleanup
   useEffect(() => {
@@ -142,67 +91,16 @@ export default function RootLayout(): React.JSX.Element {
     }
   }, [])
 
-  // Watchlist Actions
-  const toggleWatchlist = (item: MediaItem): void => {
-    const exists = watchlist.some((w) => w.id === item.id && w.contentType === item.contentType)
-    if (exists) {
-      setWatchlist(
-        watchlist.filter((w) => !(w.id === item.id && w.contentType === item.contentType))
-      )
-    } else {
-      setWatchlist([...watchlist, item])
-    }
-  }
-
-  const isItemInWatchlist = (item: MediaItem): boolean => {
-    return watchlist.some((w) => w.id === item.id && w.contentType === item.contentType)
-  }
-
-  // Watch History Actions
-  const addToWatchHistory = useCallback(
-    (item: MediaItem, season?: number, episode?: number): void => {
-      setWatchHistory((prev) => {
-        const filtered = prev.filter(
-          (historyItem) =>
-            !(historyItem.id === item.id && historyItem.contentType === item.contentType)
-        )
-        const record = {
-          ...item,
-          watchedAt: new Date().toISOString(),
-          activeSeason: season,
-          activeEpisode: episode
-        }
-        return [record, ...filtered].slice(0, 50)
-      })
-    },
-    []
-  )
-
-  const removeFromWatchHistory = useCallback((itemId: number, contentType: string): void => {
-    setWatchHistory((prev) =>
-      prev.filter((item) => !(item.id === itemId && item.contentType === contentType))
-    )
-  }, [])
-
-  const clearWatchHistory = useCallback((): void => {
-    setWatchHistory([])
-  }, [])
-
   return (
     <AuthProvider>
       <div className="flex flex-col h-screen w-screen overflow-hidden bg-background font-sans text-foreground antialiased selection:bg-primary selection:text-primary-foreground">
         <Titlebar />
-        <Navbar watchlistCount={watchlist.length} updateAvailable={!!updateInfo} />
+        <Navbar updateAvailable={!!updateInfo} />
         <main className="flex-1 flex flex-col min-h-0 bg-background relative">
           <div className="flex-1 overflow-y-auto">
             <Outlet
               context={{
-                watchlist,
-                setWatchlist,
                 getImageUrl,
-                getSlug,
-                toggleWatchlist,
-                isItemInWatchlist,
                 API_BASE_URL,
                 updateInfo,
                 downloading,
@@ -210,11 +108,7 @@ export default function RootLayout(): React.JSX.Element {
                 downloaded,
                 updaterError,
                 currentVersion,
-                cleanReleaseNotes,
-                watchHistory,
-                addToWatchHistory,
-                removeFromWatchHistory,
-                clearWatchHistory
+                cleanReleaseNotes
               }}
             />
           </div>

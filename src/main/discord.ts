@@ -3,7 +3,6 @@ import { Client } from '@xhayper/discord-rpc'
 let rpc: Client | null = null
 let isConnected = false
 
-// Custom Client ID registered for CaféVerse
 const CLIENT_ID = '1509629127559348414'
 
 export function initDiscordRPC(): void {
@@ -22,7 +21,6 @@ export function initDiscordRPC(): void {
     isConnected = false
   })
 
-  // Attempt async login to local Discord application client
   rpc.login().catch((err) => {
     console.warn('[Discord RPC] Failed to connect/login to Discord client:', err.message)
     isConnected = false

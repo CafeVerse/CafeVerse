@@ -1,0 +1,496 @@
+{
+  "info": {
+    "_postman_id": "cafeverce-api-collection",
+    "name": "CafeVerce API",
+    "description": "Postman collection to test the CafeVerce API endpoints, including TV shows, seasons, episodes, movies, and collections.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Authentication",
+      "item": [
+        {
+          "name": "Google Login",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"idToken\": \"YOUR_GOOGLE_ID_TOKEN_HERE\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/auth/google",
+              "host": ["{{baseUrl}}"],
+              "path": ["auth", "google"]
+            },
+            "description": "Exchanges a Google ID Token (credential) for a CafeVerce JWT access token."
+          },
+          "response": []
+        },
+        {
+          "name": "Get Profile (Me)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/auth/me",
+              "host": ["{{baseUrl}}"],
+              "path": ["auth", "me"]
+            },
+            "description": "Retrieves the active user profile using the CafeVerce JWT token."
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Media",
+      "item": [
+        {
+          "name": "Import Media (Movie / TV)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"imdbId\": \"tt0944947\",\n  \"contentType\": \"tv\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/media/import",
+              "host": ["{{baseUrl}}"],
+              "path": ["media", "import"]
+            },
+            "description": "Imports a movie or TV show using its IMDb ID or TMDB ID."
+          },
+          "response": []
+        },
+        {
+          "name": "Import Collection",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"collectionId\": 10\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/media/import",
+              "host": ["{{baseUrl}}"],
+              "path": ["media", "import"]
+            },
+            "description": "Imports a full collection (e.g. Star Wars, Harry Potter) by TMDB Collection ID."
+          },
+          "response": []
+        },
+        {
+          "name": "Get All Media",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/media?page=1&limit=10&sortBy=popularity&sortOrder=desc",
+              "host": ["{{baseUrl}}"],
+              "path": ["media"],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "limit",
+                  "value": "10"
+                },
+                {
+                  "key": "sortBy",
+                  "value": "popularity"
+                },
+                {
+                  "key": "sortOrder",
+                  "value": "desc"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Media Genres",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/media/genres",
+              "host": ["{{baseUrl}}"],
+              "path": ["media", "genres"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Media Collections",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/media/collections",
+              "host": ["{{baseUrl}}"],
+              "path": ["media", "collections"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Single Media by ID or Slug",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/media/game-of-thrones-2011",
+              "host": ["{{baseUrl}}"],
+              "path": ["media", "game-of-thrones-2011"]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "TV Shows",
+      "item": [
+        {
+          "name": "Get TV Shows List",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/tv?page=1&limit=10",
+              "host": ["{{baseUrl}}"],
+              "path": ["tv"],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "limit",
+                  "value": "10"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get TV Show Recently Added",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/tv/recently-added",
+              "host": ["{{baseUrl}}"],
+              "path": ["tv", "recently-added"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get TV Show Trending",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/tv/trending",
+              "host": ["{{baseUrl}}"],
+              "path": ["tv", "trending"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get TV Show Featured",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/tv/featured",
+              "host": ["{{baseUrl}}"],
+              "path": ["tv", "featured"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get TV Genres",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/tv/genres",
+              "host": ["{{baseUrl}}"],
+              "path": ["tv", "genres"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get TV Show Details by ID or Slug",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/tv/tt0944947",
+              "host": ["{{baseUrl}}"],
+              "path": ["tv", "tt0944947"]
+            },
+            "description": "Retrieves details of a TV show by its database ID, IMDb ID, or slug."
+          },
+          "response": []
+        },
+        {
+          "name": "Get TV Show Details by Content Route",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/tv/content/game-of-thrones-2011",
+              "host": ["{{baseUrl}}"],
+              "path": ["tv", "content", "game-of-thrones-2011"]
+            },
+            "description": "Retrieves details of a TV show by its content slug."
+          },
+          "response": []
+        },
+        {
+          "name": "Get TV Show Seasons",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/tv/tt0944947/seasons",
+              "host": ["{{baseUrl}}"],
+              "path": ["tv", "tt0944947", "seasons"]
+            },
+            "description": "Retrieves all seasons for a TV Show. Can use internal ID, TMDB ID, IMDb ID, or Slug."
+          },
+          "response": []
+        },
+        {
+          "name": "Get Season Episodes (Lazy loads/Caches)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/tv/tt0944947/seasons/1/episodes",
+              "host": ["{{baseUrl}}"],
+              "path": ["tv", "tt0944947", "seasons", "1", "episodes"]
+            },
+            "description": "Lazy loads and retrieves all episodes of a specific season for a TV show."
+          },
+          "response": []
+        },
+        {
+          "name": "Get Single Episode details",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/tv/episodes/1",
+              "host": ["{{baseUrl}}"],
+              "path": ["tv", "episodes", "1"]
+            },
+            "description": "Retrieves details of a single episode by its internal database ID."
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Movies",
+      "item": [
+        {
+          "name": "Get Movies List",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/movies?page=1&limit=10",
+              "host": ["{{baseUrl}}"],
+              "path": ["movies"],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "limit",
+                  "value": "10"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Movie Recently Added",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/movies/recently-added",
+              "host": ["{{baseUrl}}"],
+              "path": ["movies", "recently-added"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Movie Trending",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/movies/trending",
+              "host": ["{{baseUrl}}"],
+              "path": ["movies", "trending"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Movie Featured",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/movies/featured",
+              "host": ["{{baseUrl}}"],
+              "path": ["movies", "featured"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Movie Genres",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/movies/genres",
+              "host": ["{{baseUrl}}"],
+              "path": ["movies", "genres"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Movie Details by ID or Slug",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/movies/1",
+              "host": ["{{baseUrl}}"],
+              "path": ["movies", "1"]
+            },
+            "description": "Retrieves details of a movie by its database ID or slug."
+          },
+          "response": []
+        },
+        {
+          "name": "Get Movie Details by Content Route",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/movies/content/avatar-2009",
+              "host": ["{{baseUrl}}"],
+              "path": ["movies", "content", "avatar-2009"]
+            },
+            "description": "Retrieves details of a movie by its content slug."
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Search",
+      "item": [
+        {
+          "name": "Global Search",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/search?q=avatar&type=movie&page=1&limit=10",
+              "host": ["{{baseUrl}}"],
+              "path": ["search"],
+              "query": [
+                {
+                  "key": "q",
+                  "value": "avatar"
+                },
+                {
+                  "key": "type",
+                  "value": "movie"
+                },
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "limit",
+                  "value": "10"
+                }
+              ]
+            },
+            "description": "Searches for movies and TV shows matching the query string."
+          },
+          "response": []
+        }
+      ]
+    }
+  ],
+  "event": [
+    {
+      "listen": "prerequest",
+      "script": {
+        "type": "text/javascript",
+        "exec": [""]
+      }
+    },
+    {
+      "listen": "test",
+      "script": {
+        "type": "text/javascript",
+        "exec": [""]
+      }
+    }
+  ],
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:3000",
+      "type": "string"
+    }
+  ]
+}

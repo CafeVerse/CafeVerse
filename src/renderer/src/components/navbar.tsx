@@ -6,7 +6,6 @@ import {
   Layers,
   Film,
   Tv,
-  Bookmark,
   Menu,
   Coffee,
   RefreshCw,
@@ -30,12 +29,10 @@ import {
 } from '@/components/ui/dropdown-menu'
 
 interface NavbarProps {
-  watchlistCount: number
   updateAvailable?: boolean
 }
 
 interface SidebarContentProps {
-  watchlistCount: number
   setOpen: (open: boolean) => void
 }
 
@@ -139,7 +136,7 @@ const MobileNavItem: React.FC<{
   </NavLink>
 )
 
-const SidebarContent: React.FC<SidebarContentProps> = ({ watchlistCount, setOpen }) => (
+const SidebarContent: React.FC<SidebarContentProps> = ({ setOpen }) => (
   <div className="flex h-full flex-col bg-[#0c0a09] relative overflow-hidden border-r border-white/2">
     {/* Sidebar Header */}
     <div className="flex h-28 items-center px-8 shrink-0 relative z-10">
@@ -188,13 +185,6 @@ const SidebarContent: React.FC<SidebarContentProps> = ({ watchlistCount, setOpen
         </div>
         <div className="space-y-0.5">
           <MobileNavItem
-            to="/watchlist"
-            icon={Bookmark}
-            label="Watchlist"
-            count={watchlistCount}
-            onClick={() => setOpen(false)}
-          />
-          <MobileNavItem
             to="/history"
             icon={History}
             label="Watch History"
@@ -219,7 +209,7 @@ const getInitials = (name?: string): string => {
   return name.slice(0, 2).toUpperCase()
 }
 
-export const Navbar: React.FC<NavbarProps> = ({ watchlistCount, updateAvailable }) => {
+export const Navbar: React.FC<NavbarProps> = ({ updateAvailable }) => {
   const [open, setOpen] = useState(false)
   const { isAuthenticated, user, logout } = useAuth()
 
@@ -248,12 +238,6 @@ export const Navbar: React.FC<NavbarProps> = ({ watchlistCount, updateAvailable 
           <DesktopNavItem to="/" icon={Layers} label="Dashboard" end />
           <DesktopNavItem to="/movies" icon={Film} label="Movies" />
           <DesktopNavItem to="/tvshows" icon={Tv} label="TV Shows" />
-          <DesktopNavItem
-            to="/watchlist"
-            icon={Bookmark}
-            label="Watchlist"
-            count={watchlistCount}
-          />
           <DesktopNavItem to="/history" icon={History} label="History" />
         </nav>
 
@@ -362,7 +346,7 @@ export const Navbar: React.FC<NavbarProps> = ({ watchlistCount, updateAvailable 
                 className="flex w-72 flex-col justify-start border-r border-border/40 bg-transparent p-0"
               >
                 <SheetTitle className="sr-only">Navigation Menu</SheetTitle>
-                <SidebarContent watchlistCount={watchlistCount} setOpen={setOpen} />
+                <SidebarContent setOpen={setOpen} />
               </SheetContent>
             </Sheet>
           </div>
