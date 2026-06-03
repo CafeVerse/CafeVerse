@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react'
-import { useOutletContext } from 'react-router-dom'
+import { useOutletContext, useNavigate } from 'react-router-dom'
 import {
   Search,
   Film,
@@ -23,12 +23,13 @@ import { Badge } from '@/components/ui/badge'
 import { Separator } from '@/components/ui/separator'
 import { Skeleton } from '@/components/ui/skeleton'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
-import { MediaItem, SeasonMeta, Episode } from '@/types'
+import { MediaItem, Episode } from '@/types'
 import MediaRow from '@/components/media-row'
 
 const apiBaseUrl = 'https://cafeverce-api.vercel.app/'
 
 export default function DashboardPage(): React.JSX.Element {
+  const navigate = useNavigate()
   // Grab TMDB Image Helper from RootLayout context if available
   const { getImageUrl } = useOutletContext<{
     getImageUrl: (path?: string) => string
@@ -72,16 +73,6 @@ export default function DashboardPage(): React.JSX.Element {
       return []
     }
   })
-
-  // 4. Immersive Media Details Drawer State
-  const [activeMedia, setActiveMedia] = useState<MediaItem | null>(null)
-  const [seasons, setSeasons] = useState<SeasonMeta[]>([])
-  const [loadingSeasons, setLoadingSeasons] = useState(false)
-  const [selectedSeasonNum, setSelectedSeasonNum] = useState<number | null>(null)
-  const [episodes, setEpisodes] = useState<Episode[]>([])
-  const [loadingEpisodes, setLoadingEpisodes] = useState(false)
-  const [detailsError, setDetailsError] = useState<string | null>(null)
-  const [activeTab, setActiveTab] = useState<'overview' | 'episodes'>('overview')
 
   // 5. Simulated Video Player State
   const [isPlaying, setIsPlaying] = useState(false)
@@ -198,7 +189,7 @@ export default function DashboardPage(): React.JSX.Element {
         setErrors((prev) => ({ ...prev, featured: null }))
       } else {
         // Fallback to general list if featured is empty
-        const fallback = await fetchFromApi('/media?limit=5').catch(() => [])
+        const fallback = await fetchFromApi('/media?limit=10').catch(() => [])
         const list = resolveList(fallback)
         if (list.length > 0) {
           setFeaturedMedia(list)
@@ -225,7 +216,7 @@ export default function DashboardPage(): React.JSX.Element {
       } catch {
         // Safe degrade to general search / index endpoints
         try {
-          const fallbackPath = endpoint.includes('movies') ? '/movies?limit=10' : '/tv?limit=10'
+          const fallbackPath = endpoint.includes('movies') ? '/movies?limit=20' : '/tv?limit=20'
           const res = await fetchFromApi(fallbackPath)
           setData(resolveList(res))
         } catch {
@@ -245,6 +236,7 @@ export default function DashboardPage(): React.JSX.Element {
 
   // Setup auto-play spotlight cycle
   useEffect(() => {
+    console.log(featuredMedia.length)
     if (featuredMedia.length > 1) {
       autoPlayRef.current = setInterval(() => {
         setFeaturedIndex((prev) => (prev + 1) % featuredMedia.length)
@@ -310,138 +302,11 @@ export default function DashboardPage(): React.JSX.Element {
     return () => clearTimeout(delayDebounce)
   }, [searchQuery, searchType, fetchFromApi])
 
-  // ==========================================
-  // IMMERSIVE MEDIA SEASONS & EPISODES LAZY-LOAD
-  // ==========================================
-  const loadEpisodes = useCallback(
-    async (show: MediaItem, seasonNum: number): Promise<void> => {
-      setLoadingEpisodes(true)
-      setEpisodes([])
+  const getSlug = (item: MediaItem): string => item.slug || String(item.id)
 
-      const showId = show.id || show.tmdbId
-      const cleanBase = apiBaseUrl.replace(/\/$/, '')
-
-      try {
-        // 1. Try standard Postman route: /tv/:idOrSlug/seasons/:season/episodes
-        let res = await fetch(
-          `${cleanBase}/tv/${show.slug || showId}/seasons/${seasonNum}/episodes`
-        )
-
-        // 2. Try legacy API.md route fallback: /api/tvshows/:id/seasons/:season
-        if (!res.ok) {
-          res = await fetch(`${cleanBase}/api/tvshows/${showId}/seasons/${seasonNum}`)
-        }
-
-        if (res.ok) {
-          const json = await res.json()
-          let epList = Array.isArray(json) ? json : json.episodes || json.items || json.data || []
-
-          // Dynamic zero-latency fallback episode generator as described in API.md features!
-          if (epList.length === 0) {
-            const targetSeason = seasons.find((s) => s.seasonNumber === seasonNum)
-            const count = targetSeason?.episodeCount || 10
-            epList = Array.from({ length: count }, (_, i) => ({
-              id: i + 1,
-              episodeNumber: i + 1,
-              seasonNumber: seasonNum,
-              name: `Episode ${i + 1}`,
-              overview: `Join your favorite characters in this exciting episode ${i + 1} of Season ${seasonNum}. Discover what happens next as the adventure unfolds!`,
-              stillPath: null
-            }))
-          }
-          setEpisodes(epList)
-        }
-      } catch (e) {
-        console.error('Failed to fetch episodes:', e)
-        // Ep list fallback
-        const targetSeason = seasons.find((s) => s.seasonNumber === seasonNum)
-        const count = targetSeason?.episodeCount || 10
-        const epList = Array.from({ length: count }, (_, i) => ({
-          id: i + 1,
-          episodeNumber: i + 1,
-          seasonNumber: seasonNum,
-          name: `Episode ${i + 1}`,
-          overview: `Join your favorite characters in this exciting episode ${i + 1} of Season ${seasonNum}. Discover what happens next as the adventure unfolds!`,
-          stillPath: null
-        }))
-        setEpisodes(epList)
-      } finally {
-        setLoadingEpisodes(false)
-      }
-    },
-    [seasons]
-  )
-
-  const loadTvDetails = useCallback(
-    async (show: MediaItem): Promise<void> => {
-      setLoadingSeasons(true)
-      setSeasons([])
-      setSelectedSeasonNum(null)
-      setEpisodes([])
-      setDetailsError(null)
-      setActiveTab('overview')
-
-      try {
-        const showId = show.id || show.tmdbId
-        const cleanBase = apiBaseUrl.replace(/\/$/, '')
-
-        // 1. Fetch seasons
-        let seasonsData: SeasonMeta[] = []
-        try {
-          // Postman route: /tv/:idOrSlug/seasons
-          const res = await fetch(`${cleanBase}/tv/${show.slug || showId}/seasons`).catch(() =>
-            fetch(`${cleanBase}/api/tvshows/${showId}/seasons`)
-          )
-          if (res.ok) {
-            const json = await res.json()
-            seasonsData = Array.isArray(json) ? json : json.seasons || json.data || []
-          }
-        } catch {
-          console.warn('Failed to fetch seasons, falling back')
-        }
-
-        // Fallback generator if seasons endpoint didn't respond
-        if (seasonsData.length === 0) {
-          const count = show.numberOfSeasons || 1
-          seasonsData = Array.from({ length: count }, (_, i) => ({
-            id: i + 1,
-            seasonNumber: i + 1,
-            name: `Season ${i + 1}`,
-            episodeCount: show.numberOfEpisodes
-              ? Math.round(show.numberOfEpisodes / count)
-              : undefined
-          }))
-        }
-
-        setSeasons(seasonsData)
-
-        // Auto-load episodes for the first season
-        if (seasonsData.length > 0) {
-          const firstSeason = seasonsData[0].seasonNumber
-          setSelectedSeasonNum(firstSeason)
-          loadEpisodes(show, firstSeason)
-        }
-      } catch (e) {
-        console.error('Failed to fetch season details:', e)
-        setDetailsError('Could not fetch seasons list.')
-      } finally {
-        setLoadingSeasons(false)
-      }
-    },
-    [loadEpisodes]
-  )
-
-  // Handle open detail modal
+  // Handle open detail page
   const openMediaDetails = (media: MediaItem): void => {
-    setActiveMedia(media)
-    if (media.contentType === 'tv') {
-      loadTvDetails(media)
-    } else {
-      setSeasons([])
-      setEpisodes([])
-      setSelectedSeasonNum(null)
-      setActiveTab('overview')
-    }
+    navigate(`/movies/${getSlug(media)}`)
   }
 
   // Simulated Player state clock logic
@@ -794,322 +659,6 @@ export default function DashboardPage(): React.JSX.Element {
         ))}
       </section>
 
-      {/* 6. PREMIUM FLOATING MEDIA DETAILS DRAWER / MODAL OVERLAY */}
-      {activeMedia && (
-        <div className="fixed inset-0 bg-black/90 backdrop-blur-md flex items-center justify-center z-50 p-4 md:p-8 animate-in fade-in duration-300 select-none">
-          <div className="bg-[#0e0c0b] border border-border/40 w-full max-w-5xl h-full max-h-[85vh] rounded-3xl flex flex-col md:flex-row overflow-hidden relative shadow-2xl">
-            {/* Close modal */}
-            <button
-              onClick={() => setActiveMedia(null)}
-              className="absolute top-4 right-4 z-50 p-2 rounded-xl bg-black/60 hover:bg-black border border-white/10 hover:border-primary/20 text-white cursor-pointer transition-colors"
-            >
-              <X className="size-4.5" />
-            </button>
-
-            {/* Poster Sidebar on Large Screens */}
-            <div className="w-full md:w-80 border-r border-border/30 bg-[#070505] p-6 hidden md:flex flex-col justify-start shrink-0">
-              <div className="aspect-2/3 w-full rounded-2xl overflow-hidden shadow-2xl border border-white/5 relative">
-                {getPoster(activeMedia) ? (
-                  <img
-                    src={getPoster(activeMedia)}
-                    alt={activeMedia.title || activeMedia.name}
-                    className="h-full w-full object-cover"
-                  />
-                ) : (
-                  <div className="h-full w-full bg-muted flex items-center justify-center">
-                    <Film className="size-12 text-muted-foreground/20" />
-                  </div>
-                )}
-              </div>
-
-              {/* Media specifications */}
-              <div className="mt-6 space-y-4">
-                <div className="flex items-center justify-between text-xs border-b border-border/20 pb-2">
-                  <span className="text-muted-foreground font-bold">Type</span>
-                  <Badge className="bg-primary text-primary-foreground border-none font-black text-[9px] uppercase">
-                    {activeMedia.contentType === 'movie' ? 'Movie' : 'TV Show'}
-                  </Badge>
-                </div>
-
-                {activeMedia.releaseDate && (
-                  <div className="flex items-center justify-between text-xs border-b border-border/20 pb-2">
-                    <span className="text-muted-foreground font-bold">Release Date</span>
-                    <span className="text-white font-extrabold">
-                      {new Date(activeMedia.releaseDate).toLocaleDateString()}
-                    </span>
-                  </div>
-                )}
-
-                {activeMedia.firstAirDate && (
-                  <div className="flex items-center justify-between text-xs border-b border-border/20 pb-2">
-                    <span className="text-muted-foreground font-bold">First Air Date</span>
-                    <span className="text-white font-extrabold">
-                      {new Date(activeMedia.firstAirDate).toLocaleDateString()}
-                    </span>
-                  </div>
-                )}
-
-                {activeMedia.runtime !== undefined && activeMedia.runtime > 0 && (
-                  <div className="flex items-center justify-between text-xs border-b border-border/20 pb-2">
-                    <span className="text-muted-foreground font-bold">Duration</span>
-                    <span className="text-white font-extrabold flex items-center gap-1">
-                      <Clock className="size-3 text-primary" />
-                      {activeMedia.runtime} mins
-                    </span>
-                  </div>
-                )}
-
-                {activeMedia.status && (
-                  <div className="flex items-center justify-between text-xs border-b border-border/20 pb-2">
-                    <span className="text-muted-foreground font-bold">Status</span>
-                    <span className="text-white font-extrabold uppercase text-[10px] tracking-wider bg-white/5 px-2 py-0.5 rounded-md">
-                      {activeMedia.status}
-                    </span>
-                  </div>
-                )}
-
-                <div className="flex items-center justify-between text-xs">
-                  <span className="text-muted-foreground font-bold">Viewer Rating</span>
-                  <span className="text-amber-400 font-extrabold flex items-center gap-1">
-                    <Star className="size-3.5 fill-amber-400 stroke-none" />
-                    {activeMedia.voteAverage?.toFixed(1) || '0.0'} ({activeMedia.voteCount || 0}{' '}
-                    reviews)
-                  </span>
-                </div>
-              </div>
-            </div>
-
-            {/* Backdrop & Content Main panel */}
-            <div className="flex-1 flex flex-col min-h-0 bg-background relative overflow-y-auto">
-              {/* Immersive layered header backdrop for details */}
-              <div
-                className="h-64 shrink-0 relative bg-cover bg-center"
-                style={{ backgroundImage: `url(${getBackdrop(activeMedia)})` }}
-              >
-                <div className="absolute inset-0 bg-linear-to-t from-[#0e0c0b] via-black/50 to-transparent" />
-
-                <div className="absolute bottom-6 left-6 right-6">
-                  <div className="flex flex-wrap items-center gap-2 mb-2">
-                    <Badge className="bg-black/60 border border-white/10 text-[9px] font-black text-amber-400 gap-1 rounded-md px-1.5 py-0.5">
-                      <Star className="size-2.5 fill-amber-400 stroke-none" />
-                      <span>{activeMedia.voteAverage?.toFixed(1) || '0.0'}</span>
-                    </Badge>
-                    <span className="text-[10px] text-white/70 font-bold uppercase tracking-widest bg-primary/20 px-2 py-0.5 rounded-md">
-                      {activeMedia.contentType === 'movie' ? 'Movie' : 'TV Show'}
-                    </span>
-                  </div>
-                  <h2 className="text-xl md:text-3xl font-black text-white italic tracking-tight uppercase leading-none truncate drop-shadow-md">
-                    {activeMedia.title || activeMedia.name}
-                  </h2>
-                </div>
-              </div>
-
-              {/* Detail Tabs bar */}
-              <div className="px-6 border-b border-border/20 bg-muted/20 shrink-0 flex gap-4">
-                <button
-                  onClick={() => setActiveTab('overview')}
-                  className={`py-3.5 text-xs font-black tracking-widest uppercase cursor-pointer transition-all border-b-2 ${activeTab === 'overview' ? 'text-primary border-primary font-black' : 'text-muted-foreground/60 border-transparent hover:text-white'}`}
-                >
-                  Overview
-                </button>
-                {activeMedia.contentType === 'tv' && (
-                  <button
-                    onClick={() => setActiveTab('episodes')}
-                    className={`py-3.5 text-xs font-black tracking-widest uppercase cursor-pointer transition-all border-b-2 ${activeTab === 'episodes' ? 'text-primary border-primary font-black' : 'text-muted-foreground/60 border-transparent hover:text-white'}`}
-                  >
-                    Episodes (
-                    {activeMedia.numberOfEpisodes ||
-                      seasons.reduce((sum, s) => sum + (s.episodeCount || 0), 0) ||
-                      'Loader'}
-                    )
-                  </button>
-                )}
-              </div>
-
-              {/* Tab Contents */}
-              <div className="p-6 flex-1 min-h-0 overflow-y-auto">
-                {activeTab === 'overview' ? (
-                  <div className="space-y-6">
-                    <div className="space-y-2">
-                      <h4 className="text-[10px] uppercase tracking-[0.2em] text-primary font-black">
-                        Synopsis
-                      </h4>
-                      <p className="text-xs text-muted-foreground/85 leading-relaxed font-bold tracking-tight">
-                        {activeMedia.overview || 'No description is available for this title yet.'}
-                      </p>
-                    </div>
-
-                    {activeMedia.tagline && (
-                      <div className="border-l-4 border-primary pl-4 py-1 italic text-xs text-muted-foreground/80 font-medium">
-                        &ldquo;{activeMedia.tagline}&rdquo;
-                      </div>
-                    )}
-
-                    {activeMedia.genres && activeMedia.genres.length > 0 && (
-                      <div className="space-y-2">
-                        <h4 className="text-[10px] uppercase tracking-[0.2em] text-primary font-black">
-                          Genres
-                        </h4>
-                        <div className="flex flex-wrap gap-1.5">
-                          {activeMedia.genres.map((g) => (
-                            <Badge
-                              key={g}
-                              className="bg-muted text-white/80 border-border/40 text-[10px] font-bold px-2.5 py-0.5 rounded-full select-none"
-                            >
-                              {g}
-                            </Badge>
-                          ))}
-                        </div>
-                      </div>
-                    )}
-
-                    {/* Simulation trigger */}
-                    <div className="pt-4 flex gap-4">
-                      <Button
-                        onClick={() => startPlayback()}
-                        className="bg-primary text-primary-foreground font-black px-6 py-4.5 rounded-xl cursor-pointer hover:bg-primary/95 flex items-center gap-2 text-xs hover:scale-102 hover:shadow-lg hover:shadow-primary/20 transition-all"
-                      >
-                        <Play className="size-4.5 fill-current animate-pulse" />
-                        <span>Watch Preview</span>
-                      </Button>
-
-                      <Button
-                        variant="outline"
-                        onClick={() => toggleWatchlist(activeMedia)}
-                        className={`border rounded-xl px-5 py-4.5 font-bold cursor-pointer transition-all flex items-center gap-2 text-xs ${isItemInWatchlist(activeMedia) ? 'bg-primary/15 border-primary text-primary' : 'bg-white/5 border-white/10 hover:bg-white/10 text-white'}`}
-                      >
-                        {isItemInWatchlist(activeMedia) ? (
-                          <>
-                            <Check className="size-4" />
-                            <span>In Watchlist</span>
-                          </>
-                        ) : (
-                          <>
-                            <Plus className="size-4" />
-                            <span>Add to Watchlist</span>
-                          </>
-                        )}
-                      </Button>
-                    </div>
-                  </div>
-                ) : (
-                  // TV Show Season & Episodes browser
-                  <div className="space-y-6">
-                    {detailsError && (
-                      <div className="p-3 bg-rose-500/10 border border-rose-500/20 text-rose-400 rounded-xl text-xs font-bold">
-                        {detailsError}
-                      </div>
-                    )}
-
-                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-border/20 pb-4">
-                      <div className="space-y-1">
-                        <span className="text-[10px] uppercase tracking-[0.2em] text-primary font-black block">
-                          Browse Series Seasons
-                        </span>
-                        <h4 className="text-sm font-black text-white">Choose a season</h4>
-                      </div>
-
-                      {loadingSeasons ? (
-                        <Skeleton className="h-9 w-44 bg-muted/20" />
-                      ) : (
-                        <select
-                          value={selectedSeasonNum || ''}
-                          onChange={(e) => {
-                            const num = parseInt(e.target.value)
-                            setSelectedSeasonNum(num)
-                            loadEpisodes(activeMedia, num)
-                          }}
-                          className="h-9.5 bg-muted hover:bg-muted/80 border border-border/40 hover:border-primary/20 text-white font-extrabold text-xs rounded-xl px-3 outline-hidden focus:ring-1 focus:ring-primary cursor-pointer transition-all"
-                        >
-                          {seasons.map((s) => (
-                            <option
-                              key={s.seasonNumber}
-                              value={s.seasonNumber}
-                              className="bg-background font-bold text-xs py-2"
-                            >
-                              {s.name} ({s.episodeCount || '?'} Episodes)
-                            </option>
-                          ))}
-                        </select>
-                      )}
-                    </div>
-
-                    {loadingEpisodes ? (
-                      <div className="space-y-3">
-                        {Array.from({ length: 3 }).map((_, i) => (
-                          <Skeleton key={i} className="h-24 w-full rounded-2xl bg-muted/15" />
-                        ))}
-                      </div>
-                    ) : episodes.length === 0 ? (
-                      <div className="py-12 text-center text-xs text-muted-foreground/60">
-                        We couldn&apos;t find any episodes for this season.
-                      </div>
-                    ) : (
-                      <div className="space-y-3.5">
-                        {episodes.map((ep) => (
-                          <div
-                            key={ep.id}
-                            className="bg-[#12100f] border border-border/40 hover:border-primary/20 p-4.5 rounded-2xl flex flex-col md:flex-row gap-4.5 items-start group/ep transition-all duration-300 hover:shadow-lg hover:shadow-primary/2"
-                          >
-                            <div className="aspect-video w-full md:w-44 bg-muted rounded-xl overflow-hidden shrink-0 relative border border-white/5 shadow-inner">
-                              {ep.stillPath ? (
-                                <img
-                                  src={getImageUrl(ep.stillPath)}
-                                  alt={ep.name}
-                                  className="h-full w-full object-cover transition-transform duration-500 group-hover/ep:scale-105"
-                                  loading="lazy"
-                                />
-                              ) : (
-                                <div className="h-full w-full bg-linear-to-br from-muted/50 to-background flex items-center justify-center">
-                                  <Tv className="size-6 text-muted-foreground/20" />
-                                </div>
-                              )}
-                              <button
-                                onClick={() => startPlayback(ep)}
-                                className="absolute inset-0 bg-black/60 opacity-0 group-hover/ep:opacity-100 flex items-center justify-center transition-opacity duration-300 cursor-pointer"
-                              >
-                                <Play className="size-6 text-primary fill-current" />
-                              </button>
-                              <Badge className="absolute bottom-2 left-2 bg-black/80 border border-white/10 text-[8.5px] font-black text-white tracking-widest uppercase rounded">
-                                S{ep.seasonNumber.toString().padStart(2, '0')}E
-                                {ep.episodeNumber.toString().padStart(2, '0')}
-                              </Badge>
-                            </div>
-
-                            <div className="flex-1 space-y-1.5">
-                              <div className="flex items-center justify-between gap-2">
-                                <h5 className="font-extrabold text-xs text-white group-hover/ep:text-primary transition-colors">
-                                  {ep.episodeNumber}. {ep.name}
-                                </h5>
-                                {ep.airDate && (
-                                  <span className="text-[9px] text-muted-foreground/60 font-bold">
-                                    {new Date(ep.airDate).toLocaleDateString()}
-                                  </span>
-                                )}
-                              </div>
-                              <p className="text-[10.5px] leading-relaxed text-muted-foreground/75 font-bold tracking-tight">
-                                {ep.overview || 'No description is available for this episode yet.'}
-                              </p>
-                              <button
-                                onClick={() => startPlayback(ep)}
-                                className="text-[9.5px] font-black tracking-wider uppercase text-primary hover:text-white flex items-center gap-1 cursor-pointer transition-colors mt-2"
-                              >
-                                <Play className="size-2.5 fill-current" />
-                                <span>Watch Episode</span>
-                              </button>
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                    )}
-                  </div>
-                )}
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
-
       {/* 7. IMMERSIVE GLOWING SIMULATED STREAMING MEDIA PLAYER OVERLAY */}
       {isPlaying && (
         <div className="fixed inset-0 z-50 bg-[#070505] flex items-center justify-center p-4 md:p-8 animate-in zoom-in-95 duration-200">
@@ -1117,7 +666,7 @@ export default function DashboardPage(): React.JSX.Element {
             {/* Background screen shadow mock */}
             <div
               className="absolute inset-0 bg-cover bg-center opacity-40 blur-md pointer-events-none"
-              style={{ backgroundImage: `url(${getBackdrop(activeMedia || undefined)})` }}
+              style={{ backgroundImage: `url(${getBackdrop(activeSpotlight || undefined)})` }}
             />
 
             {/* Streaming simulation container */}
@@ -1132,7 +681,7 @@ export default function DashboardPage(): React.JSX.Element {
                 </Badge>
 
                 <h3 className="text-lg md:text-2xl font-black text-white italic tracking-tight uppercase leading-none">
-                  {activeMedia?.title || activeMedia?.name}
+                  {activeSpotlight?.title || activeSpotlight?.name}
                 </h3>
 
                 {playEpisode && (

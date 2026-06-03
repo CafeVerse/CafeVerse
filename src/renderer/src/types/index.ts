@@ -6,6 +6,7 @@ import type { cleanReleaseNotes } from '@/lib/utils'
 // ---------------------------------------------------------------------------
 
 export interface CastMember {
+  id?: number
   name: string
   character: string
   profilePath: string
