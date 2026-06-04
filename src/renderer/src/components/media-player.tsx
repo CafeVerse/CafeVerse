@@ -108,8 +108,7 @@ export default function MediaPlayer({ item }: MediaPlayerProps): React.JSX.Eleme
 
     return () => clearTimeout(timer)
   }, [isTv, currentSeason, item, seasons])
-
-  const mediaId = item.tmdbId || item.id
+  const mediaId = item.imdbId
   const embedUrl = isTv
     ? `https://vaplayer.ru/embed/tv/${mediaId}/${currentSeason}/${currentEpisode}`
     : `https://vaplayer.ru/embed/movie/${mediaId}`
