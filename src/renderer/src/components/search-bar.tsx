@@ -30,7 +30,7 @@ export default function SearchBar({
   return (
     <div className="flex w-full items-center gap-3">
       {/* Text input */}
-      <div className="flex flex-1 md:w-96 md:flex-none items-center bg-muted/40 border border-border/40 rounded-full px-3 py-1 text-xs shadow-inner focus-within:border-primary/40 focus-within:ring-2 focus-within:ring-primary/10 transition-all duration-200">
+      <div className="flex flex-1 items-center bg-muted/40 border border-border/40 rounded-full px-3 py-1 text-xs shadow-inner focus-within:border-primary/40 focus-within:ring-2 focus-within:ring-primary/10 transition-all duration-200">
         <Search className="size-4 text-muted-foreground/60 mr-2 shrink-0" />
         <input
           id="global-search-input"

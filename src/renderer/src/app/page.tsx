@@ -13,11 +13,13 @@ import {
   X,
   Flame,
   HelpCircle,
-  Bookmark
+  Bookmark,
+  Search
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Skeleton } from '@/components/ui/skeleton'
+import { Dialog, DialogContent, DialogTrigger, DialogTitle } from '@/components/ui/dialog'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
 import type { MediaItem, Episode } from '@/types'
 import MediaRow from '@/components/media-row'
@@ -60,6 +62,7 @@ export default function DashboardPage(): React.JSX.Element {
   })
 
   // 3. Search state
+  const [searchOpen, setSearchOpen] = useState(false)
   const {
     query: searchQuery,
     setQuery: setSearchQuery,
@@ -313,25 +316,44 @@ export default function DashboardPage(): React.JSX.Element {
 
   return (
     <div className="min-h-full pb-16 bg-background text-foreground flex flex-col font-sans select-none antialiased animate-fade-in">
-      {/* 1. SEARCH BAR */}
+      {/* 1. GLOBAL SEARCH (MODAL) */}
       <section className="sticky top-0 z-30 px-8 py-4 backdrop-blur-xl bg-background/60 border-b border-border/40 flex flex-col md:flex-row gap-4 justify-between items-center transition-all duration-300">
-        <SearchBar
-          query={searchQuery}
-          onQueryChange={setSearchQuery}
-          type={searchType}
-          onTypeChange={setSearchType}
-          onClear={clearSearch}
-        />
+        <Dialog open={searchOpen} onOpenChange={setSearchOpen}>
+          <DialogTrigger asChild>
+            <Button
+              variant="outline"
+              className="w-full md:w-96 justify-start text-muted-foreground bg-muted/40 border-border/40 hover:bg-muted hover:text-foreground rounded-full px-4"
+            >
+              <Search className="size-4 mr-2" />
+              <span>Search movies, TV shows...</span>
+            </Button>
+          </DialogTrigger>
+          <DialogContent className="sm:max-w-[800px] p-0 overflow-hidden bg-background border-border/40 gap-0">
+            <DialogTitle className="sr-only">Global Search</DialogTitle>
+            <div className="p-4 border-b border-border/40 bg-muted/10">
+              <SearchBar
+                query={searchQuery}
+                onQueryChange={setSearchQuery}
+                type={searchType}
+                onTypeChange={setSearchType}
+                onClear={clearSearch}
+              />
+            </div>
+            <div className="max-h-[60vh] overflow-y-auto">
+              <SearchResultsPanel
+                query={searchQuery}
+                results={searchResults}
+                isSearching={isSearching}
+                getPosterUrl={getPoster}
+                onItemClick={(item) => {
+                  setSearchOpen(false)
+                  openMediaDetails(item)
+                }}
+              />
+            </div>
+          </DialogContent>
+        </Dialog>
       </section>
-
-      {/* 2. SEARCH RESULTS */}
-      <SearchResultsPanel
-        query={searchQuery}
-        results={searchResults}
-        isSearching={isSearching}
-        getPosterUrl={getPoster}
-        onItemClick={openMediaDetails}
-      />
 
       {/* 4. VISUALLY STUNNING SPOTLIGHT FEATURED HERO BANNER */}
       <section className="px-8 mt-2 select-none relative z-10 shrink-0">
