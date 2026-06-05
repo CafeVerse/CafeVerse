@@ -1,5 +1,5 @@
-import React, { useState } from 'react'
-import { NavLink } from 'react-router-dom'
+import React, { useState, useEffect } from 'react'
+import { NavLink, useNavigate } from 'react-router-dom'
 import { useAuth } from '@/context/auth-context'
 
 import {
@@ -13,7 +13,8 @@ import {
   LogOut,
   Heart,
   History,
-  Home
+  Home,
+  Search
 } from 'lucide-react'
 import { Sheet, SheetContent, SheetTrigger, SheetTitle } from '@/components/ui/sheet'
 import { Button } from '@/components/ui/button'
@@ -27,6 +28,11 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger
 } from '@/components/ui/dropdown-menu'
+import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog'
+import SearchBar from '@/components/search-bar'
+import { SearchResultsPanel } from '@/components/search-results'
+import { useSearch } from '@/hooks/use-search'
+import type { MediaItem } from '@/types'
 
 interface NavbarProps {
   updateAvailable?: boolean
@@ -206,6 +212,47 @@ const getInitials = (name?: string): string => {
 export const Navbar: React.FC<NavbarProps> = ({ updateAvailable }) => {
   const [open, setOpen] = useState(false)
   const { isAuthenticated, user, logout } = useAuth()
+  const navigate = useNavigate()
+
+  // Global Search State
+  const [searchOpen, setSearchOpen] = useState(false)
+  const {
+    query: searchQuery,
+    setQuery: setSearchQuery,
+    results: searchResults,
+    isSearching,
+    type: searchType,
+    setType: setSearchType,
+    clear: clearSearch
+  } = useSearch()
+
+  // Listen for global keyboard shortcut to toggle search dialog (Ctrl+K or Cmd+K)
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent): void => {
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k') {
+        e.preventDefault()
+        setSearchOpen((prev) => !prev)
+      }
+    }
+    window.addEventListener('keydown', handleKeyDown)
+    return () => window.removeEventListener('keydown', handleKeyDown)
+  }, [])
+
+  const getPoster = (item?: MediaItem): string => {
+    if (!item) return ''
+    if (item.posterPath) return `https://image.tmdb.org/t/p/original${item.posterPath}`
+    return ''
+  }
+
+  const handleItemClick = (media: MediaItem): void => {
+    setSearchOpen(false)
+    const slug = media.slug || String(media.id)
+    if (media.contentType === 'tv') {
+      navigate(`/tv/${slug}`)
+    } else {
+      navigate(`/movies/${slug}`)
+    }
+  }
 
   return (
     <header className="h-16 w-full shrink-0 flex items-center justify-between px-8 bg-[#0c0a09] border-b border-white/3 relative z-40 select-none">
@@ -237,6 +284,30 @@ export const Navbar: React.FC<NavbarProps> = ({ updateAvailable }) => {
 
         {/* Actions / Utility container */}
         <div className="flex items-center gap-3">
+          {/* Global Search Buttons (Responsive) */}
+          <Button
+            variant="outline"
+            onClick={() => setSearchOpen(true)}
+            className="hidden lg:flex w-52 justify-between items-center text-muted-foreground bg-muted/40 border-white/5 hover:bg-muted hover:text-foreground rounded-xl px-3 py-1.5 text-xs h-9.5 cursor-pointer"
+          >
+            <div className="flex items-center gap-2">
+              <Search className="size-4" />
+              <span>Search...</span>
+            </div>
+            <kbd className="pointer-events-none select-none items-center gap-0.5 rounded border border-white/10 bg-muted px-1.5 font-mono text-[9px] font-extrabold opacity-80 flex text-muted-foreground/80">
+              Ctrl K
+            </kbd>
+          </Button>
+
+          <Button
+            variant="outline"
+            onClick={() => setSearchOpen(true)}
+            className="flex lg:hidden size-9.5 justify-center items-center text-muted-foreground bg-muted/40 border-white/5 hover:bg-muted hover:text-foreground rounded-xl cursor-pointer"
+            title="Search movies & TV shows"
+          >
+            <Search className="size-4.5" />
+          </Button>
+
           {updateAvailable && (
             <NavLink
               to="/update"
@@ -348,6 +419,31 @@ export const Navbar: React.FC<NavbarProps> = ({ updateAvailable }) => {
       </div>
 
       <div className="hidden md:block absolute bottom-0 left-0 right-0 h-px bg-white/2 pointer-events-none" />
+
+      {/* Global Search Modal */}
+      <Dialog open={searchOpen} onOpenChange={setSearchOpen}>
+        <DialogContent className="sm:max-w-[800px] p-0 overflow-hidden bg-background border-border/40 gap-0">
+          <DialogTitle className="sr-only">Global Search</DialogTitle>
+          <div className="p-4 border-b border-border/40 bg-muted/10">
+            <SearchBar
+              query={searchQuery}
+              onQueryChange={setSearchQuery}
+              type={searchType}
+              onTypeChange={setSearchType}
+              onClear={clearSearch}
+            />
+          </div>
+          <div className="max-h-[60vh] overflow-y-auto">
+            <SearchResultsPanel
+              query={searchQuery}
+              results={searchResults}
+              isSearching={isSearching}
+              getPosterUrl={getPoster}
+              onItemClick={handleItemClick}
+            />
+          </div>
+        </DialogContent>
+      </Dialog>
     </header>
   )
 }
