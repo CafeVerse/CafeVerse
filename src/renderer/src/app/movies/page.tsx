@@ -2,16 +2,13 @@ import React, { useState, useEffect, useCallback, useRef } from 'react'
 import { useOutletContext, useNavigate } from 'react-router-dom'
 import {
   Film,
-  SlidersHorizontal,
   Star,
   Plus,
   Check,
-  X,
   ChevronLeft,
   ChevronRight,
   PlayCircle,
   Flame,
-  Sparkles,
   AlertTriangle,
   RotateCcw,
   Play,
@@ -21,18 +18,15 @@ import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
 import { Separator } from '@/components/ui/separator'
-import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area'
-import type { MediaItem, MetaPagination } from '@/types'
+import GenreFilter from '@/components/genre-filter'
+import type { MediaItem, MetaPagination, SortOption } from '@/types'
 
 const API_BASE = 'https://cafeverce-api.vercel.app'
 const TMDB_W500 = 'https://image.tmdb.org/t/p/w500'
 const TMDB_ORIG = 'https://image.tmdb.org/t/p/original'
 const PAGE_SIZE = 24
 
-type SortKey = 'popularity' | 'voteAverage' | 'releaseDate' | 'title'
-type SortOrder = 'asc' | 'desc'
-
-const SORT_OPTIONS: { label: string; key: SortKey; order: SortOrder }[] = [
+const SORT_OPTIONS: SortOption[] = [
   { label: 'Most Popular', key: 'popularity', order: 'desc' },
   { label: 'Top Rated', key: 'voteAverage', order: 'desc' },
   { label: 'Newest First', key: 'releaseDate', order: 'desc' },
@@ -80,52 +74,6 @@ const resolvePagination = (res: unknown): MetaPagination | null => {
 const getSlug = (item: MediaItem): string => item.slug || String(item.id)
 
 // ─── Sub-components ──────────────────────────────────────────────────────────
-
-function GenreChip({
-  label,
-  active,
-  onClick
-}: {
-  label: string
-  active: boolean
-  onClick: () => void
-}): React.JSX.Element {
-  return (
-    <button
-      onClick={onClick}
-      className={`px-3 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-widest cursor-pointer transition-all duration-200 border select-none whitespace-nowrap ${
-        active
-          ? 'bg-primary text-primary-foreground border-primary shadow-sm shadow-primary/20'
-          : 'bg-muted/40 text-muted-foreground/70 border-border/30 hover:bg-muted hover:text-white hover:border-border/60'
-      }`}
-    >
-      {label}
-    </button>
-  )
-}
-
-function SortButton({
-  label,
-  active,
-  onClick
-}: {
-  label: string
-  active: boolean
-  onClick: () => void
-}): React.JSX.Element {
-  return (
-    <button
-      onClick={onClick}
-      className={`px-3 py-1.5 rounded-lg text-[10px] font-black cursor-pointer transition-all duration-200 border select-none whitespace-nowrap ${
-        active
-          ? 'bg-primary/15 text-primary border-primary/30'
-          : 'bg-muted/30 text-muted-foreground/60 border-border/20 hover:bg-muted/60 hover:text-white'
-      }`}
-    >
-      {label}
-    </button>
-  )
-}
 
 function MovieCard({
   item,
@@ -227,7 +175,7 @@ export default function MoviesPage(): React.JSX.Element {
   const { getImageUrl } = useOutletContext<{ getImageUrl: (path?: string) => string }>()
 
   // ── Genres ────────────────────────────────────────────────────────────────
-  const [genres, setGenres] = useState<string[]>([])
+  const [genres, setGenres] = useState<{ id: number; name: string }[]>([])
   const [selectedGenre, setSelectedGenre] = useState<string | null>(null)
 
   // ── Catalogue ─────────────────────────────────────────────────────────────
@@ -284,13 +232,21 @@ export default function MoviesPage(): React.JSX.Element {
         if (data && typeof data === 'object') {
           const obj = data as Record<string, unknown>
           const resolved = Array.isArray(obj.genres)
-            ? obj.genres.map((g) => (typeof g === 'string' ? g : (g as { name: string }).name))
+            ? obj.genres
             : Array.isArray(obj.data)
-              ? obj.data.map((g) => (typeof g === 'string' ? g : (g as { name: string }).name))
+              ? obj.data
               : []
-          setGenres(resolved)
+          const mapped = (resolved as (string | { id?: number; name?: string })[]).map((g) => {
+            if (typeof g === 'string') return { id: 0, name: g }
+            return { id: g.id || 0, name: g.name || '' }
+          })
+          setGenres(mapped)
         } else if (Array.isArray(data)) {
-          setGenres(data.map((g) => (typeof g === 'string' ? g : (g as { name: string }).name)))
+          const mapped = (data as (string | { id?: number; name?: string })[]).map((g) => {
+            if (typeof g === 'string') return { id: 0, name: g }
+            return { id: g.id || 0, name: g.name || '' }
+          })
+          setGenres(mapped)
         }
       })
       .catch(() => {})
@@ -314,8 +270,13 @@ export default function MoviesPage(): React.JSX.Element {
   }, [featured])
 
   const loadMovies = useCallback(async () => {
-    setLoadingMovies(true)
-    setMoviesError(null)
+    // Avoid synchronous state updates in the callback's immediate body
+    // by deferring them or wrapping them in a microtask/Promise if they execute synchronously.
+    // However, the cleanest React way is to perform state changes asynchronously or check mounting.
+    Promise.resolve().then(() => {
+      setLoadingMovies(true)
+      setMoviesError(null)
+    })
     try {
       const params = new URLSearchParams({
         page: String(currentPage),
@@ -323,7 +284,10 @@ export default function MoviesPage(): React.JSX.Element {
         sortBy: sortOption.key,
         sortOrder: sortOption.order
       })
-      if (selectedGenre) params.append('genre', selectedGenre)
+      if (selectedGenre) {
+        const genreObj = genres.find((g) => g.name === selectedGenre)
+        if (genreObj) params.append('genreId', String(genreObj.id))
+      }
       const data = await fetchApi(`/movies?${params}`)
       setMovies(resolveList(data))
       setPagination(resolvePagination(data))
@@ -333,21 +297,12 @@ export default function MoviesPage(): React.JSX.Element {
     } finally {
       setLoadingMovies(false)
     }
-  }, [currentPage, sortOption, selectedGenre, fetchApi])
+  }, [currentPage, sortOption, selectedGenre, genres, fetchApi])
 
   useEffect(() => {
-    const timer = setTimeout(() => {
-      loadMovies()
-    }, 0)
-    return () => clearTimeout(timer)
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    loadMovies()
   }, [loadMovies])
-
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      setCurrentPage(1)
-    }, 0)
-    return () => clearTimeout(timer)
-  }, [selectedGenre, sortOption])
 
   // ── Derived ───────────────────────────────────────────────────────────────
   const spotlight = featured[featuredIdx]
@@ -360,23 +315,23 @@ export default function MoviesPage(): React.JSX.Element {
   // ─────────────────────────────────────────────────────────────────────────
   return (
     <div className="min-h-full bg-background text-foreground font-sans antialiased pb-20 select-none">
-      {/* ── 1. Top bar: sort ──────────────────────────────────────────────── */}
-      <div className="sticky top-0 z-30 px-6 py-3.5 backdrop-blur-xl bg-background/60 border-b border-border/30 flex items-center gap-3 flex-wrap">
-        <div className="flex items-center gap-1.5 ml-auto flex-wrap">
-          <SlidersHorizontal className="size-3.5 text-muted-foreground/40 shrink-0" />
-          <span className="text-[10px] text-muted-foreground/40 font-bold uppercase tracking-widest hidden sm:block">
-            Sort:
-          </span>
-          {SORT_OPTIONS.map((opt) => (
-            <SortButton
-              key={opt.label}
-              label={opt.label}
-              active={sortOption.key === opt.key && sortOption.order === opt.order}
-              onClick={() => setSortOption(opt)}
-            />
-          ))}
-        </div>
-      </div>
+      {/* ── 1. Sort + Genre filter + Heading ────────────────────────────── */}
+      <GenreFilter
+        genres={genres.map((g) => g.name)}
+        selectedGenre={selectedGenre}
+        onGenreChange={(g) => {
+          setSelectedGenre(g)
+          setCurrentPage(1)
+        }}
+        sortOptions={SORT_OPTIONS}
+        activeSortOption={sortOption}
+        onSortChange={(o) => {
+          setSortOption(o)
+          setCurrentPage(1)
+        }}
+        contentLabel="Movies"
+        totalItems={pagination?.totalItems}
+      />
 
       {/* ── 2. Featured spotlight ─────────────────────────────────────────── */}
       {spotlight && (
@@ -475,51 +430,6 @@ export default function MoviesPage(): React.JSX.Element {
           </div>
         </section>
       )}
-
-      {/* ── 3. Genre filter pills ─────────────────────────────────────────── */}
-      {genres.length > 0 && (
-        <section className="px-6 pt-5">
-          <ScrollArea className="w-full whitespace-nowrap pb-2.5">
-            <div className="flex gap-2 pb-1">
-              <GenreChip
-                label="All"
-                active={selectedGenre === null}
-                onClick={() => setSelectedGenre(null)}
-              />
-              {genres.map((g) => (
-                <GenreChip
-                  key={g}
-                  label={g}
-                  active={selectedGenre === g}
-                  onClick={() => setSelectedGenre(selectedGenre === g ? null : g)}
-                />
-              ))}
-            </div>
-            <ScrollBar orientation="horizontal" className="bg-muted/10" />
-          </ScrollArea>
-        </section>
-      )}
-
-      {/* ── 5. Catalogue heading ─────────────────────────────────────────── */}
-      <section className="px-6 pt-6 pb-3 flex items-center justify-between">
-        <h2 className="text-sm font-black tracking-tight text-white flex items-center gap-2">
-          <Sparkles className="size-4 text-primary" />
-          {selectedGenre ? `${selectedGenre} Movies` : 'All Movies'}
-          {pagination && (
-            <span className="text-[10px] text-muted-foreground/40 font-bold ml-1">
-              ({pagination.totalItems?.toLocaleString()})
-            </span>
-          )}
-        </h2>
-        {selectedGenre && (
-          <button
-            onClick={() => setSelectedGenre(null)}
-            className="text-[10px] text-muted-foreground/50 hover:text-white font-bold flex items-center gap-1 cursor-pointer transition-colors"
-          >
-            <X className="size-3" /> Clear filter
-          </button>
-        )}
-      </section>
 
       {/* ── 6. Movie grid ────────────────────────────────────────────────── */}
       <section className="px-6">

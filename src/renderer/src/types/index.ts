@@ -5,6 +5,15 @@ import type { cleanReleaseNotes } from '@/lib/utils'
 // Media types
 // ---------------------------------------------------------------------------
 
+export type SortKey = 'popularity' | 'voteAverage' | 'releaseDate' | 'title'
+export type SortOrder = 'asc' | 'desc'
+
+export interface SortOption {
+  label: string
+  key: SortKey
+  order: SortOrder
+}
+
 export interface CastMember {
   id?: number
   name: string
