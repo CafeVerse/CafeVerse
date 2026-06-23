@@ -269,6 +269,7 @@ jobs:
             dist/*.AppImage
             dist/*.deb
             dist/*.yml
+            dist/*.blockmap
           retention-days: 5
 
       - name: Upload Binaries to Draft Release
@@ -282,6 +283,7 @@ jobs:
             dist/*.AppImage
             dist/*.deb
             dist/*.yml
+            dist/*.blockmap
             !dist/win-unpacked
             !dist/linux-unpacked
           fail_on_unmatched_files: false

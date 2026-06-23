@@ -1,4 +1,4 @@
 provider: github
 owner: VikumKarunathilake
 repo: CafeVerse
-updaterCacheDirName: movies-updater
+updaterCacheDirName: cafeverse-updater

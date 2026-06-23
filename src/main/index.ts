@@ -164,30 +164,32 @@ function registerUpdater(window: BrowserWindow): void {
 
   autoUpdater.on('update-available', (info) => {
     console.log('[Updater] Update available')
-    window.webContents.send('updater-available', info)
+    if (!window.isDestroyed()) window.webContents.send('updater-available', info)
   })
 
   autoUpdater.on('update-not-available', () => {
     console.log('[Updater] Update not available.')
-    window.webContents.send('updater-not-available')
+    if (!window.isDestroyed()) window.webContents.send('updater-not-available')
   })
 
   autoUpdater.on('download-progress', (progressObj) => {
     console.log('[Updater] Download progress:', progressObj)
-    window.webContents.send('updater-progress', progressObj)
+    if (!window.isDestroyed()) window.webContents.send('updater-progress', progressObj)
   })
 
   autoUpdater.on('update-downloaded', (info) => {
     console.log('[Updater] Update downloaded:', info)
-    window.webContents.send('updater-downloaded', info)
+    if (!window.isDestroyed()) window.webContents.send('updater-downloaded', info)
   })
 
   autoUpdater.on('error', (err) => {
     console.error('[Updater] Error:', err)
-    window.webContents.send(
-      'updater-error',
-      err == null ? 'unknown' : (err.stack || err).toString()
-    )
+    if (!window.isDestroyed()) {
+      window.webContents.send(
+        'updater-error',
+        err == null ? 'unknown' : (err.stack || err).toString()
+      )
+    }
   })
 
   ipcMain.on('updater-check', () => {
