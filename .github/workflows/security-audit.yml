@@ -1,0 +1,30 @@
+name: "Security Audit"
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+  workflow_call:
+
+jobs:
+  trufflehog:
+    name: TruffleHog Secret Scan
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: read
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+      with:
+        fetch-depth: 0
+        persist-credentials: false
+
+    - name: TruffleHog OSS
+      uses: trufflesecurity/trufflehog@d6ce0f82c3dd0ffbd75a703f19b589e71f52ce68 # v3.83.0
+      with:
+        path: ./
+        base: ${{ github.event.pull_request.base.sha || github.event.before || 'HEAD~1' }}
+        head: HEAD
