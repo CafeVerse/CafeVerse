@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback, useRef } from 'react'
+import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react'
 import { useOutletContext, useNavigate } from 'react-router-dom'
 import {
   Tv,
@@ -281,6 +281,8 @@ export default function AnimePage(): React.JSX.Element {
     }
   }, [featured])
 
+  const genreMap = useMemo(() => new Map(genres.map((g) => [g.name, g])), [genres])
+
   const loadShows = useCallback(async () => {
     Promise.resolve().then(() => {
       setLoadingShows(true)
@@ -291,7 +293,7 @@ export default function AnimePage(): React.JSX.Element {
         // Multi-genre filtering fallback: fetch all anime for each selected genre in parallel,
         // then intersect them to find matches belonging to all selected genres.
         const fetches = selectedGenres.map(async (genreName) => {
-          const genreObj = genres.find((g) => g.name === genreName)
+          const genreObj = genreMap.get(genreName)
           const params = new URLSearchParams({
             limit: '1000',
             sortBy: sortOption.key,
@@ -334,7 +336,7 @@ export default function AnimePage(): React.JSX.Element {
           sortOrder: sortOption.order
         })
         if (selectedGenres.length === 1) {
-          const genreObj = genres.find((g) => g.name === selectedGenres[0])
+          const genreObj = genreMap.get(selectedGenres[0])
           if (genreObj) params.append('genreId', String(genreObj.id))
         }
         const data = await fetchApi(`/anime?${params}`)
@@ -348,7 +350,7 @@ export default function AnimePage(): React.JSX.Element {
     } finally {
       setLoadingShows(false)
     }
-  }, [currentPage, sortOption, selectedGenres, genres, fetchApi])
+  }, [currentPage, sortOption, selectedGenres, genreMap, fetchApi])
 
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect
