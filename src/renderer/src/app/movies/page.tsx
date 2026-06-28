@@ -192,6 +192,14 @@ export default function MoviesPage(): React.JSX.Element {
   const [featuredIdx, setFeaturedIdx] = useState(0)
   const spotlightRef = useRef<NodeJS.Timeout | null>(null)
 
+  // ── Multi-genre Cache ─────────────────────────────────────────────────────
+  const filterCache = useRef<{
+    genres: string[]
+    sortKey: string
+    sortOrder: string
+    results: MediaItem[]
+  } | null>(null)
+
   // ── Watchlist ─────────────────────────────────────────────────────────────
   const [watchlist, setWatchlist] = useState<MediaItem[]>(() => {
     try {
@@ -271,36 +279,62 @@ export default function MoviesPage(): React.JSX.Element {
   }, [featured])
 
   const loadMovies = useCallback(async () => {
-    // Avoid synchronous state updates in the callback's immediate body
-    // by deferring them or wrapping them in a microtask/Promise if they execute synchronously.
-    // However, the cleanest React way is to perform state changes asynchronously or check mounting.
-    Promise.resolve().then(() => {
-      setLoadingMovies(true)
-      setMoviesError(null)
-    })
+    // Determine if we can use cached results for multi-genre filtering
+    const isMultiGenre = selectedGenres.length > 1
+    const cacheMatches =
+      filterCache.current &&
+      filterCache.current.genres.length === selectedGenres.length &&
+      selectedGenres.every((g) => filterCache.current?.genres.includes(g)) &&
+      filterCache.current.sortKey === sortOption.key &&
+      filterCache.current.sortOrder === sortOption.order
+
+    if (!isMultiGenre || !cacheMatches) {
+      Promise.resolve().then(() => {
+        setLoadingMovies(true)
+        setMoviesError(null)
+      })
+    }
+
     try {
-      if (selectedGenres.length > 1) {
-        // Multi-genre filtering fallback: fetch all movies for each selected genre in parallel,
-        // then intersect them to find matches belonging to all selected genres.
-        const fetches = selectedGenres.map(async (genreName) => {
-          const genreObj = genres.find((g) => g.name === genreName)
-          const params = new URLSearchParams({
-            limit: '1000',
-            sortBy: sortOption.key,
-            sortOrder: sortOption.order
+      if (isMultiGenre) {
+        let filtered: MediaItem[] = []
+
+        if (cacheMatches && filterCache.current) {
+          filtered = filterCache.current.results
+        } else {
+          // Multi-genre filtering fallback: fetch all movies for each selected genre in parallel,
+          // then intersect them to find matches belonging to all selected genres.
+          const fetches = selectedGenres.map(async (genreName) => {
+            const genreObj = genres.find((g) => g.name === genreName)
+            const params = new URLSearchParams({
+              limit: '1000',
+              sortBy: sortOption.key,
+              sortOrder: sortOption.order
+            })
+            if (genreObj) params.append('genreId', String(genreObj.id))
+            const res = await fetchApi(`/movies?${params}`)
+            return resolveList(res)
           })
-          if (genreObj) params.append('genreId', String(genreObj.id))
-          const res = await fetchApi(`/movies?${params}`)
-          return resolveList(res)
-        })
 
-        const lists = await Promise.all(fetches)
+          const lists = await Promise.all(fetches)
 
-        // Intersect the lists by movie ID
-        let filtered = lists[0] || []
-        for (let i = 1; i < lists.length; i++) {
-          const ids = new Set(lists[i].map((m) => m.id))
-          filtered = filtered.filter((m) => ids.has(m.id))
+          // Intersect the lists by movie ID
+          // Optimized: Sort lists by length ascending to minimize set lookups and intermediate array sizes
+          const sortedLists = [...lists].sort((a, b) => a.length - b.length)
+          filtered = sortedLists[0] || []
+
+          if (sortedLists.length > 1) {
+            const sets = sortedLists.slice(1).map((list) => new Set(list.map((m) => m.id)))
+            filtered = filtered.filter((item) => sets.every((set) => set.has(item.id)))
+          }
+
+          // Update cache
+          filterCache.current = {
+            genres: [...selectedGenres],
+            sortKey: sortOption.key,
+            sortOrder: sortOption.order,
+            results: filtered
+          }
         }
 
         // Paginate locally
