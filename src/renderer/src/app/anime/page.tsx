@@ -388,7 +388,6 @@ export default function AnimePage(): React.JSX.Element {
   }, [currentPage, sortOption, selectedGenres, genres, fetchApi])
 
   useEffect(() => {
-    // eslint-disable-next-line react-hooks/set-state-in-effect
     loadShows()
   }, [loadShows])
 
