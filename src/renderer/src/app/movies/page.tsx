@@ -177,6 +177,7 @@ export default function MoviesPage(): React.JSX.Element {
 
   // ── Genres ────────────────────────────────────────────────────────────────
   const [genres, setGenres] = useState<{ id: number; name: string }[]>([])
+  const genreMap = React.useMemo(() => new Map(genres.map((g) => [g.name, g])), [genres])
   const [selectedGenres, setSelectedGenres] = useState<string[]>([])
 
   // ── Catalogue ─────────────────────────────────────────────────────────────
@@ -278,12 +279,16 @@ export default function MoviesPage(): React.JSX.Element {
       setLoadingMovies(true)
       setMoviesError(null)
     })
+
+    // Create a lookup map for faster genre object retrieval
+    const genreMap = new Map(genres.map((g) => [g.name, g]))
+
     try {
       if (selectedGenres.length > 1) {
         // Multi-genre filtering fallback: fetch all movies for each selected genre in parallel,
         // then intersect them to find matches belonging to all selected genres.
         const fetches = selectedGenres.map(async (genreName) => {
-          const genreObj = genres.find((g) => g.name === genreName)
+          const genreObj = genreMap.get(genreName)
           const params = new URLSearchParams({
             limit: '1000',
             sortBy: sortOption.key,
@@ -296,23 +301,18 @@ export default function MoviesPage(): React.JSX.Element {
 
         const lists = await Promise.all(fetches)
 
-        // Intersect the lists by movie ID (optimized: preserve order of first list, O(1) lookups)
-        let filtered: MediaItem[] = []
-        if (lists.length > 0) {
-          filtered = lists[0] || []
-          for (let i = 1; i < lists.length; i++) {
-            const currentList = lists[i]
-            if (currentList.length === 0) {
-              filtered = []
-              break
-            }
-            const ids = new Set()
-            for (let j = 0; j < currentList.length; j++) {
-              ids.add(currentList[j].id)
-            }
-            filtered = filtered.filter((m) => ids.has(m.id))
-            if (filtered.length === 0) break
-          }
+        // Intersect the lists by movie ID (optimized)
+        // Sort by length to minimize filter operations and set creation overhead.
+        // We preserve lists[0] if lengths are equal to maintain idiomatic ordering.
+        const sortedLists = [...lists].sort((a, b) => a.length - b.length)
+        let filtered = sortedLists[0] || []
+
+        for (let i = 1; i < sortedLists.length; i++) {
+          if (filtered.length === 0) break // Short-circuit if no matches remain
+
+          const currentList = sortedLists[i]
+          const ids = new Set<number>(currentList.map((m) => m.id))
+          filtered = filtered.filter((m) => ids.has(m.id))
         }
 
         // Paginate locally
@@ -338,7 +338,7 @@ export default function MoviesPage(): React.JSX.Element {
           sortOrder: sortOption.order
         })
         if (selectedGenres.length === 1) {
-          const genreObj = genres.find((g) => g.name === selectedGenres[0])
+          const genreObj = genreMap.get(selectedGenres[0])
           if (genreObj) params.append('genreId', String(genreObj.id))
         }
         const data = await fetchApi(`/movies?${params}`)
