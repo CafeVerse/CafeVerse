@@ -138,11 +138,11 @@ export default function DashboardPage(): React.JSX.Element {
     return 'linear-gradient(to right, var(--color-muted), var(--color-background))'
   }
 
-  const getPoster = (item?: MediaItem): string => {
+  const getPoster = useCallback((item?: MediaItem): string => {
     if (!item) return ''
     if (item.posterPath) return getImageUrl(item.posterPath)
     return ''
-  }
+  }, [getImageUrl])
 
   // ==========================================
   // CONTENT INITIALIZER (Fires on API change)
@@ -274,19 +274,22 @@ export default function DashboardPage(): React.JSX.Element {
     return () => clearTimeout(timer)
   }, [loadDashboardData])
 
-  const getSlug = (item: MediaItem): string => item.slug || String(item.id)
+  const getSlug = useCallback((item: MediaItem): string => item.slug || String(item.id), [])
 
   // Handle open detail page
-  const openMediaDetails = (media: MediaItem): void => {
-    const slug = getSlug(media)
-    if (media.contentType === 'tv') {
-      navigate(`/tv/${slug}`)
-    } else if (media.contentType === 'anime') {
-      navigate(`/anime/${slug}`)
-    } else {
-      navigate(`/movies/${slug}`)
-    }
-  }
+  const openMediaDetails = useCallback(
+    (media: MediaItem): void => {
+      const slug = getSlug(media)
+      if (media.contentType === 'tv') {
+        navigate(`/tv/${slug}`)
+      } else if (media.contentType === 'anime') {
+        navigate(`/anime/${slug}`)
+      } else {
+        navigate(`/movies/${slug}`)
+      }
+    },
+    [getSlug, navigate]
+  )
 
   // Simulated Player state clock logic
   useEffect(() => {

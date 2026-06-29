@@ -15,7 +15,7 @@ export interface MediaRowProps {
   getPosterUrl: (item: MediaItem) => string
 }
 
-export default function MediaRow({
+const MediaRow = React.memo(function MediaRow({
   title,
   icon: Icon,
   data = [],
@@ -151,4 +151,6 @@ export default function MediaRow({
       )}
     </div>
   )
-}
+})
+
+export default MediaRow
