@@ -464,7 +464,7 @@
                 }
               ]
             },
-            "description": "Results page — returns full MediaItem objects with all fields, paginated. Used for the /search results page."
+            "description": "Results page - returns full MediaItem objects with all fields, paginated. Used for the /search results page."
           },
           "response": []
         },
@@ -489,7 +489,7 @@
                 }
               ]
             },
-            "description": "Dropdown suggestions — returns up to 8 lightweight items with a similarity score. Used to power the search bar autocomplete dropdown."
+            "description": "Dropdown suggestions - returns up to 8 lightweight items with a similarity score. Used to power the search bar autocomplete dropdown."
           },
           "response": []
         }

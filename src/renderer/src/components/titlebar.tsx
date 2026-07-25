@@ -1,6 +1,6 @@
 import React, { useEffect } from 'react'
 import { Minus, Square, X, ChevronLeft, ChevronRight, RotateCw } from 'lucide-react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate } from 'react-router'
 
 const Titlebar: React.FC = () => {
   const navigate = useNavigate()

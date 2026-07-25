@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react'
-import { useOutletContext, useNavigate } from 'react-router-dom'
+import { useOutletContext, useNavigate } from 'react-router'
 import {
   Film,
   Star,
@@ -363,7 +363,7 @@ export default function MoviesPage(): React.JSX.Element {
   const displayMovies = movies
   const totalPages = pagination?.totalPages ?? 1
 
-  // Suppress unused warning — getImageUrl is passed to child via context and used for backdrop
+  // Suppress unused warning - getImageUrl is passed to child via context and used for backdrop
   void getImageUrl
 
   // ─────────────────────────────────────────────────────────────────────────

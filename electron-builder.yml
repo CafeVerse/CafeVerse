@@ -1,7 +1,9 @@
 appId: io.github.cafeverse.cafeverse
-productName: CaféVerse
+productName: CafeVerse
 directories:
   buildResources: build
+electronLanguages:
+  - en-US
 files:
   - '!**/.vscode/*'
   - '!src/*'
@@ -9,18 +11,13 @@ files:
   - '!{.eslintcache,eslint.config.mjs,.prettierignore,.prettierrc.yaml,dev-app-update.yml,CHANGELOG.md,README.md}'
   - '!{.env,.env.*,.npmrc,pnpm-lock.yaml}'
   - '!{tsconfig.json,tsconfig.node.json,tsconfig.web.json}'
-  - '!node_modules/@capacitor/android/**/*'
-  - '!node_modules/@capacitor/core/**/*'
-  - '!android/**/*'
-asarUnpack:
-  - resources/**
+
 win:
   executableName: cafeverse
   icon: build/icon.ico
   target:
     - target: nsis
     - target: msi
-    - target: msix
 nsis:
   artifactName: CafeVerse-${version}-windows${arch}.${ext}
   shortcutName: ${productName}
@@ -30,20 +27,9 @@ msi:
   artifactName: CafeVerse-${version}-windows${arch}.${ext}
   shortcutName: ${productName}
   createDesktopShortcut: always
-msix:
-  artifactName: CafeVerse-${version}-windows${arch}.${ext}
-  displayName: CaféVerse
-  publisherDisplayName: CaféVerse
-  identityName: CafeVerse.CafeVerse
-  publisher: CN=CafeVerse
 mac:
   identity: null
   entitlementsInherit: build/entitlements.mac.plist
-  extendInfo:
-    - NSCameraUsageDescription: Application requests access to the device's camera.
-    - NSMicrophoneUsageDescription: Application requests access to the device's microphone.
-    - NSDocumentsFolderUsageDescription: Application requests access to the user's Documents folder.
-    - NSDownloadsFolderUsageDescription: Application requests access to the user's Downloads folder.
   notarize: false
 dmg:
   artifactName: CafeVerse-${version}-${arch}.${ext}

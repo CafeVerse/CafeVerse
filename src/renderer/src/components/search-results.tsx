@@ -6,7 +6,7 @@ import { Separator } from '@/components/ui/separator'
 import type { MediaItem, AutocompleteItem } from '@/types'
 
 // ---------------------------------------------------------------------------
-// SearchResultCard — single poster tile
+// SearchResultCard - single poster tile
 // ---------------------------------------------------------------------------
 
 export interface SearchResultCardProps {
@@ -92,7 +92,7 @@ export function SearchResultCard({
 }
 
 // ---------------------------------------------------------------------------
-// SearchResultsPanel — full results overlay section
+// SearchResultsPanel - full results overlay section
 // ---------------------------------------------------------------------------
 
 export interface SearchResultsPanelProps {
@@ -171,7 +171,7 @@ export function SearchResultsPanel({
 }
 
 // ---------------------------------------------------------------------------
-// AutocompletePanel — compact autocomplete suggestion rows
+// AutocompletePanel - compact autocomplete suggestion rows
 // ---------------------------------------------------------------------------
 
 export interface AutocompletePanelProps {

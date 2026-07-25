@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react'
-import { Outlet } from 'react-router-dom'
+import { Outlet } from 'react-router'
 import Navbar from '@/components/navbar'
 import Titlebar from '@/components/titlebar'
 import { cleanReleaseNotes } from '@/lib/utils'

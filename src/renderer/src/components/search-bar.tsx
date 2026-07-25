@@ -17,7 +17,7 @@ const TYPE_OPTIONS: { value: SearchType; label: string }[] = [
 ]
 
 /**
- * Sticky global search bar — input field + type filter pills.
+ * Sticky global search bar - input field + type filter pills.
  * Renders at the top of DashboardPage inside a sticky section.
  */
 export default function SearchBar({

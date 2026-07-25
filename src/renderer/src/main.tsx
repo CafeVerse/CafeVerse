@@ -4,7 +4,7 @@ import { ScrollArea } from '@/components/ui/scroll-area'
 
 import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
-import { RouterProvider } from 'react-router-dom'
+import { RouterProvider } from 'react-router'
 import { router } from './router'
 
 createRoot(document.getElementById('root')!).render(
