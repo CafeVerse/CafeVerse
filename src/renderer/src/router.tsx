@@ -1,5 +1,5 @@
 import React from 'react'
-import { createHashRouter, Navigate, type RouteObject } from 'react-router-dom'
+import { createHashRouter, Navigate, type RouteObject } from 'react-router'
 import RootLayout from '@/app/layout'
 
 /**

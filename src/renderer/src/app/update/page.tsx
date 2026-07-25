@@ -1,5 +1,5 @@
 import React, { useState } from 'react'
-import { NavLink, useOutletContext } from 'react-router-dom'
+import { NavLink, useOutletContext } from 'react-router'
 import {
   ArrowLeft,
   ArrowUpCircle,

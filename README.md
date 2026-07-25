@@ -34,12 +34,12 @@ Built with Electron, React, TypeScript, Tailwind CSS 4.0, and powered by Bun.
 
 ## 💾 Installation
 
-### 🪟 Windows (via WinGet)
+### 🪟 Windows (via PowerShell)
 
-Install CaféVerse directly using Windows Package Manager (WinGet):
+Install or update to the latest release with a single command:
 
-```cmd
-winget install --id CafeVerse.CafeVerse
+```powershell
+iwr -useb https://raw.githubusercontent.com/cafeverse/cafeverse/main/install.ps1 | iex
 ```
 
 ---
