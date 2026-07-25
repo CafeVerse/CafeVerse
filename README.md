@@ -32,6 +32,18 @@ Built with Electron, React, TypeScript, Tailwind CSS 4.0, and powered by Bun.
 
 ---
 
+## 💾 Installation
+
+### 🪟 Windows (via WinGet)
+
+Install CaféVerse directly using Windows Package Manager (WinGet):
+
+```cmd
+winget install --id CafeVerse.CafeVerse
+```
+
+---
+
 ## 🚀 Getting Started
 
 ### Prerequisites
@@ -42,7 +54,7 @@ Ensure you have [Bun](https://bun.sh/) installed locally on your operating syste
 
 ```bash
 # Clone the repository
-git clone https://github.com/VikumKarunathilake/movies-app.git
+git clone https://github.com/CafeVerse/CafeVerse.git
 cd movies-app
 
 # Install dependencies using Bun (takes < 10 seconds)

@@ -1,4 +1,4 @@
-appId: io.github.vikumkarunathilake.cafeverse
+appId: io.github.cafeverse.cafeverse
 productName: CaféVerse
 directories:
   buildResources: build
@@ -20,6 +20,7 @@ win:
   target:
     - target: nsis
     - target: msi
+    - target: msix
 nsis:
   artifactName: CafeVerse-${version}-windows${arch}.${ext}
   shortcutName: ${productName}
@@ -29,6 +30,12 @@ msi:
   artifactName: CafeVerse-${version}-windows${arch}.${ext}
   shortcutName: ${productName}
   createDesktopShortcut: always
+msix:
+  artifactName: CafeVerse-${version}-windows${arch}.${ext}
+  displayName: CaféVerse
+  publisherDisplayName: CaféVerse
+  identityName: CafeVerse.CafeVerse
+  publisher: CN=CafeVerse
 mac:
   identity: null
   entitlementsInherit: build/entitlements.mac.plist
@@ -53,7 +60,7 @@ deb:
 npmRebuild: false
 publish:
   provider: github
-  owner: VikumKarunathilake
+  owner: CafeVerse
   repo: CafeVerse
 electronDownload:
   mirror: https://npmmirror.com/mirrors/electron/

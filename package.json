@@ -4,7 +4,7 @@
   "description": "An Electron application with React and TypeScript",
   "main": "./out/main/index.js",
   "author": "Vikum Karunathilake",
-  "homepage": "https://github.com/VikumKarunathilake/CafeVerse",
+  "homepage": "https://cafeverse.github.io",
   "license": "Apache-2.0",
   "scripts": {
     "format": "prettier --write .",
