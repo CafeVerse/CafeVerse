@@ -75,10 +75,18 @@ try {
 catch {
     Write-Host "  [X] Download failed." -ForegroundColor Red
     Write-Host "    $_" -ForegroundColor DarkGray
+    Remove-Item -Path $tempDir -Recurse -Force -ErrorAction SilentlyContinue
     exit 1
 }
 
 Write-Host "  [+] Downloaded to $installerPath" -ForegroundColor Green
+
+# --- Verify installer file ---
+if (-not (Test-Path $installerPath) -or (Get-Item $installerPath).Length -lt 1MB) {
+    Write-Host "  [X] Downloaded file is invalid or too small." -ForegroundColor Red
+    Remove-Item -Path $tempDir -Recurse -Force -ErrorAction SilentlyContinue
+    exit 1
+}
 
 # --- Run installer ---
 Write-Host "  -> Launching installer..." -ForegroundColor Yellow
@@ -88,6 +96,7 @@ try {
 catch {
     Write-Host "  [X] Failed to launch installer." -ForegroundColor Red
     Write-Host "    $_" -ForegroundColor DarkGray
+    Remove-Item -Path $tempDir -Recurse -Force -ErrorAction SilentlyContinue
     exit 1
 }
 
@@ -98,3 +107,5 @@ Remove-Item -Path $tempDir -Recurse -Force -ErrorAction SilentlyContinue
 Write-Host ""
 Write-Host "  [+] CafeVerse $version installed/updated successfully!" -ForegroundColor Green
 Write-Host ""
+
+exit 0
