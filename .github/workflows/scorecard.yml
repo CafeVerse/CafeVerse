@@ -6,7 +6,10 @@ on:
   schedule:
     - cron: '30 1 * * 6' # Weekly on Saturdays
 
-permissions: read-all
+permissions:
+  contents: read
+  id-token: write
+  security-events: write
 
 jobs:
   analysis:
