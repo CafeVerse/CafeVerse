@@ -4,25 +4,10 @@ import react from '@vitejs/plugin-react'
 
 export default defineConfig({
   main: {
-    plugins: [
-      externalizeDepsPlugin({
-        exclude: [
-          '@electron-toolkit/utils',
-          '@electron-toolkit/preload',
-          '@ghostery/adblocker-electron',
-          '@xhayper/discord-rpc',
-          'cross-fetch',
-          'electron-updater'
-        ]
-      })
-    ]
+    plugins: [externalizeDepsPlugin()]
   },
   preload: {
-    plugins: [
-      externalizeDepsPlugin({
-        exclude: ['@electron-toolkit/utils', '@electron-toolkit/preload']
-      })
-    ]
+    plugins: [externalizeDepsPlugin()]
   },
   renderer: {
     resolve: {

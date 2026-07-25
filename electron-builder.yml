@@ -6,7 +6,6 @@ directories:
 electronLanguages:
   - en-US
 files:
-  - '!**/*'
   - 'out/**/*'
   - 'resources/**/*'
   - '!**/node_modules/*/{CHANGELOG.md,README.md,README,readme.md,readme}'
