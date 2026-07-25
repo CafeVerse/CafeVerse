@@ -67,10 +67,21 @@ $installerPath = Join-Path $tempDir $fileName
 
 Write-Host "  -> Downloading $fileName ($fileSizeMB MB)..." -ForegroundColor Yellow
 
-# --- Download ---
+# --- Download with progress bar ---
 try {
     if (-not (Test-Path $tempDir)) { New-Item -ItemType Directory -Path $tempDir -Force | Out-Null }
-    Invoke-WebRequest -Uri $downloadUrl -OutFile $installerPath -UseBasicParsing
+    
+    # Use a web client for better progress reporting
+    $webClient = New-Object System.Net.WebClient
+    $webClient.add_DownloadProgressChanged({
+        $progressPercent = [math]::Round(($_.BytesReceived / $_.TotalBytesToReceive) * 100, 1)
+        Write-Progress -Activity "Downloading $fileName" -Status "$progressPercent% ($([math]::Round($_.BytesReceived / 1MB, 1))MB / $fileSizeMB MB)" -PercentComplete $progressPercent
+    })
+    $webClient.add_DownloadFileCompleted({
+        Write-Progress -Activity "Downloading $fileName" -Completed
+    })
+    
+    $webClient.DownloadFile($downloadUrl, $installerPath)
 }
 catch {
     Write-Host "  [X] Download failed." -ForegroundColor Red
@@ -82,11 +93,20 @@ catch {
 Write-Host "  [+] Downloaded to $installerPath" -ForegroundColor Green
 
 # --- Verify installer file ---
-if (-not (Test-Path $installerPath) -or (Get-Item $installerPath).Length -lt 1MB) {
-    Write-Host "  [X] Downloaded file is invalid or too small." -ForegroundColor Red
+if (-not (Test-Path $installerPath)) {
+    Write-Host "  [X] Downloaded file does not exist." -ForegroundColor Red
     Remove-Item -Path $tempDir -Recurse -Force -ErrorAction SilentlyContinue
     exit 1
 }
+
+$fileSize = (Get-Item $installerPath).Length
+if ($fileSize -lt 1MB) {
+    Write-Host "  [X] Downloaded file is too small ($([math]::Round($fileSize / 1MB, 2))MB). Installation may be corrupted." -ForegroundColor Red
+    Remove-Item -Path $tempDir -Recurse -Force -ErrorAction SilentlyContinue
+    exit 1
+}
+
+Write-Host "  [+] Installer verified ($([math]::Round($fileSize / 1MB, 1))MB)" -ForegroundColor Green
 
 # --- Run installer ---
 Write-Host "  -> Launching installer..." -ForegroundColor Yellow
