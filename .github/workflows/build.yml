@@ -18,6 +18,8 @@ concurrency:
   group: release-${{ github.ref }}
   cancel-in-progress: true
 
+permissions: read-all
+
 jobs:
   trufflehog:
     uses: ./.github/workflows/security-audit.yml

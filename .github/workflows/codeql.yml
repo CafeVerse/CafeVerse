@@ -9,6 +9,8 @@ on:
     - cron: '30 13 * * 4'
   workflow_call:
 
+permissions: read-all
+
 jobs:
   analyze:
     name: Analyze
