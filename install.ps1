@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     CaféVerse Installer & Updater - Downloads and runs the latest release from GitHub.
 
@@ -24,11 +24,25 @@ Write-Host ""
 
 # --- Fetch latest release metadata ---
 Write-Host "  → Fetching latest release..." -ForegroundColor Yellow
+$release = $null
+
 try {
     $release = Invoke-RestMethod -Uri $apiUrl -Headers @{ Accept = "application/vnd.github+json" }
 } catch {
-    Write-Host "  ✗ Failed to fetch release info from GitHub." -ForegroundColor Red
-    Write-Host "    $_" -ForegroundColor DarkGray
+    # If /releases/latest returns 404 (e.g. when releases are marked as pre-release), fall back to /releases
+    try {
+        $allReleasesUrl = "https://api.github.com/repos/$repo/releases"
+        $releases = Invoke-RestMethod -Uri $allReleasesUrl -Headers @{ Accept = "application/vnd.github+json" }
+        $release = $releases | Where-Object { -not $_.draft } | Select-Object -First 1
+    } catch {
+        Write-Host "  ✗ Failed to fetch release info from GitHub." -ForegroundColor Red
+        Write-Host "    $_" -ForegroundColor DarkGray
+        exit 1
+    }
+}
+
+if (-not $release) {
+    Write-Host "  ✗ No published releases found for $repo." -ForegroundColor Red
     exit 1
 }
 
