@@ -138,11 +138,14 @@ export default function DashboardPage(): React.JSX.Element {
     return 'linear-gradient(to right, var(--color-muted), var(--color-background))'
   }
 
-  const getPoster = useCallback((item?: MediaItem): string => {
-    if (!item) return ''
-    if (item.posterPath) return getImageUrl(item.posterPath)
-    return ''
-  }, [getImageUrl])
+  const getPoster = useCallback(
+    (item?: MediaItem): string => {
+      if (!item) return ''
+      if (item.posterPath) return getImageUrl(item.posterPath)
+      return ''
+    },
+    [getImageUrl]
+  )
 
   // ==========================================
   // CONTENT INITIALIZER (Fires on API change)

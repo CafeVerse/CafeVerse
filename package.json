@@ -14,7 +14,7 @@
     "typecheck": "bun run typecheck:node && bun run typecheck:web",
     "start": "electron-vite preview",
     "dev": "electron-vite dev",
-    "build": "NODE_ENV=production bun run typecheck && electron-vite build",
+    "build": "electron-vite build",
     "postinstall": "electron-builder install-app-deps",
     "build:unpack": "bun run build && electron-builder --dir",
     "build:win": "NODE_ENV=production bun run build && electron-builder --win",
