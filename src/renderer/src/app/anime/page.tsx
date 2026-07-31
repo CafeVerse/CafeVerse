@@ -185,6 +185,11 @@ export default function AnimePage(): React.JSX.Element {
   const [genres, setGenres] = useState<{ id: number; name: string }[]>([])
   const genreMap = React.useMemo(() => new Map(genres.map((g) => [g.name, g])), [genres])
   const [selectedGenres, setSelectedGenres] = useState<string[]>([])
+  const multiGenreCacheRef = useRef<{
+    genres: string[]
+    sort: SortOption
+    data: MediaItem[]
+  } | null>(null)
 
   // ── Catalogue ─────────────────────────────────────────────────────────────
   const [shows, setShows] = useState<MediaItem[]>([])
@@ -289,32 +294,61 @@ export default function AnimePage(): React.JSX.Element {
     })
     try {
       if (selectedGenres.length > 1) {
-        // Multi-genre filtering fallback: fetch all anime for each selected genre in parallel,
-        // then intersect them to find matches belonging to all selected genres.
-        const fetches = selectedGenres.map(async (genreName) => {
-          const genreObj = genreMap.get(genreName)
-          const params = new URLSearchParams({
-            limit: '1000',
-            sortBy: sortOption.key,
-            sortOrder: sortOption.order
+        let filtered: MediaItem[] = []
+
+        // Check cache to avoid redundant fetches on local pagination
+        if (
+          multiGenreCacheRef.current &&
+          multiGenreCacheRef.current.sort.key === sortOption.key &&
+          multiGenreCacheRef.current.sort.order === sortOption.order &&
+          multiGenreCacheRef.current.genres.length === selectedGenres.length &&
+          multiGenreCacheRef.current.genres.every((g) => selectedGenres.includes(g))
+        ) {
+          filtered = multiGenreCacheRef.current.data
+        } else {
+          // Multi-genre filtering fallback: fetch all anime for each selected genre in parallel,
+          // then intersect them to find matches belonging to all selected genres.
+          const fetches = selectedGenres.map(async (genreName) => {
+            const genreObj = genreMap.get(genreName)
+            const params = new URLSearchParams({
+              limit: '1000',
+              sortBy: sortOption.key,
+              sortOrder: sortOption.order
+            })
+            if (genreObj) params.append('genreId', String(genreObj.id))
+            const res = await fetchApi(`/anime?${params}`)
+            return resolveList(res)
           })
-          if (genreObj) params.append('genreId', String(genreObj.id))
-          const res = await fetchApi(`/anime?${params}`)
-          return resolveList(res)
-        })
 
-        const lists = await Promise.all(fetches)
+          const lists = await Promise.all(fetches)
 
-        // Intersect the lists by anime ID
-        let filtered = lists[0] || []
-        for (let i = 1; i < lists.length; i++) {
-          if (filtered.length === 0) break
-          const currentList = lists[i]
-          const ids = new Set<number>()
-          for (let j = 0; j < currentList.length; j++) {
-            ids.add(currentList[j].id)
+          // Intersect the lists by anime ID
+          filtered = lists[0] || []
+          if (filtered.length > 0 && lists.length > 1) {
+            const sets: Set<number>[] = []
+            for (let i = 1; i < lists.length; i++) {
+              const ids = new Set<number>()
+              const currentList = lists[i]
+              for (let j = 0; j < currentList.length; j++) {
+                ids.add(currentList[j].id)
+              }
+              sets.push(ids)
+            }
+
+            filtered = filtered.filter((m) => {
+              for (let i = 0; i < sets.length; i++) {
+                if (!sets[i].has(m.id)) return false
+              }
+              return true
+            })
           }
-          filtered = filtered.filter((m) => ids.has(m.id))
+
+          // Cache the final intersected list
+          multiGenreCacheRef.current = {
+            genres: [...selectedGenres],
+            sort: { ...sortOption },
+            data: filtered
+          }
         }
 
         // Paginate locally
@@ -357,7 +391,6 @@ export default function AnimePage(): React.JSX.Element {
   }, [currentPage, sortOption, selectedGenres, genreMap, fetchApi])
 
   useEffect(() => {
-    // eslint-disable-next-line react-hooks/set-state-in-effect
     loadShows()
   }, [loadShows])
 

@@ -3,7 +3,7 @@
 **A premium, ultra-responsive desktop client for movies and TV shows metadata.**  
 Built with Electron, React, TypeScript, Tailwind CSS 4.0, and powered by Bun.
 
-![Powered by Bun](https://img.shields.io/badge/Bun-%23000000.svg?style=for-the-badge&logo=bun&logoColor=white) ![Electron](https://img.shields.io/badge/Electron-47848F?style=for-the-badge&logo=electron&logoColor=white) ![React](https://img.shields.io/badge/React-20232A?style=for-the-badge&logo=react&logoColor=61DAFB) ![TypeScript](https://img.shields.io/badge/TypeScript-007ACC?style=for-the-badge&logo=typescript&logoColor=white) ![Tailwind CSS 4.0](https://img.shields.io/badge/Tailwind_CSS-38B2AC?style=for-the-badge&logo=tailwind-css&logoColor=white) ![Ghostery](https://img.shields.io/badge/ghostery-powered-blue?style=for-the-badge&logo=ghostery)
+![Powered by Bun](https://img.shields.io/badge/Bun-%23000000.svg?style=for-the-badge&logo=bun&logoColor=white) ![Electron](https://img.shields.io/badge/Electron-47848F?style=for-the-badge&logo=elec[...]
 
 ---
 
@@ -41,6 +41,21 @@ Install or update to the latest release with a single command:
 ```powershell
 iwr -useb https://raw.githubusercontent.com/cafeverse/cafeverse/main/install.ps1 | iex
 ```
+
+---
+
+### 🐧 Linux (via shell)
+
+Install or update to the latest release with a single command:
+
+```bash
+curl -sL https://raw.githubusercontent.com/cafeverse/cafeverse/main/install.sh | bash
+```
+
+Notes:
+- The script will try to select a Linux-friendly asset (AppImage, .deb, or tarball), download it to a temporary directory, and run or install it where appropriate.
+- Installing .deb packages requires sudo and may prompt for a password.
+- For security, consider reviewing the script before running it or use the raw URL to download and inspect the file first.
 
 ---
 
@@ -116,7 +131,6 @@ Please read our [Contributing Guide](CONTRIBUTING.md) for details on code style,
 CaféVerse is a client application providing media metadata indexation:
 
 - **No Video Hosting:** This application does **not** host, store, upload, or broadcast any video files, media streams, or copyrighted video contents on its servers.
-- **Content Aggregation:** All playback is handled via external, non-affiliated third-party player embeds. CaféVerse acts strictly as an aggregator and browser interface for streams hosted by other services.
-- **Takedowns:** If you are a copyright owner and want to request removal of copyrighted streams, please direct your requests to the respective third-party hosting services hosting the content. If you believe your copyrighted metadata is indexed in infringement, you may submit a notice as outlined in our in-app **DMCA Copyright Policy**.
+- **Content Aggregation:** All playback is handled via external, non-affiliated third-party player embeds. CaféVerse acts strictly as an aggregator and browser interface for streams hosted by ot[...]
 
 Made with ☕ by the [CaféVerse Team](TEAM.md).
