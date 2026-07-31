@@ -53,6 +53,7 @@ curl -sL https://raw.githubusercontent.com/cafeverse/cafeverse/main/install.sh |
 ```
 
 Notes:
+
 - The script will try to select a Linux-friendly asset (AppImage, .deb, or tarball), download it to a temporary directory, and run or install it where appropriate.
 - Installing .deb packages requires sudo and may prompt for a password.
 - For security, consider reviewing the script before running it or use the raw URL to download and inspect the file first.

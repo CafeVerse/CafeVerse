@@ -199,7 +199,7 @@ export default function DashboardPage(): React.JSX.Element {
         setErrors((prev) => ({ ...prev, featured: null }))
       } else {
         // Fallback to general list if featured is empty
-        const fallback = await fetchFromApi('/media?limit=10').catch(() => [])
+        const fallback = await fetchFromApi('/media?limit=10&sortBy=createdAt').catch(() => [])
         const list = resolveList(fallback)
         if (list.length > 0) {
           setFeaturedMedia(list)
