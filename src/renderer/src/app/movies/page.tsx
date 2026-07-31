@@ -27,9 +27,9 @@ const TMDB_ORIG = 'https://image.tmdb.org/t/p/original'
 const PAGE_SIZE = 24
 
 const SORT_OPTIONS: SortOption[] = [
+  { label: 'Newly Uploaded', key: 'createdAt', order: 'desc' },
   { label: 'Most Popular', key: 'popularity', order: 'desc' },
   { label: 'Top Rated', key: 'voteAverage', order: 'desc' },
-  { label: 'Newly Uploaded', key: 'createdAt', order: 'desc' },
   { label: 'Newest First', key: 'releaseDate', order: 'desc' },
   { label: 'Oldest First', key: 'releaseDate', order: 'asc' },
   { label: 'A – Z', key: 'title', order: 'asc' }
