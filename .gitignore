@@ -1,0 +1,97 @@
+# Miscellaneous / OS
+*.class
+*.log
+*.pyc
+*.swp
+.DS_Store
+.atom/
+.build/
+.buildlog/
+.history
+.svn/
+.swiftpm/
+migrate_working_dir/
+Thumbs.db
+desktop.ini
+ehthumbs.db
+
+# IntelliJ related
+*.iml
+*.ipr
+*.iws
+.idea/
+
+# Visual Studio Code related
+.vscode/
+
+# Flutter / Dart / Pub related
+**/doc/api/
+**/ios/Flutter/.last_build_id
+.dart_tool/
+.flutter-plugins
+.flutter-plugins-dependencies
+.pub-cache/
+.pub/
+/build/
+/coverage/
+
+# Symbolication related
+app.*.symbols
+
+# Obfuscation related
+app.*.map.json
+
+# Android specific
+/android/app/debug
+/android/app/profile
+/android/app/release
+**/android/.gradle/
+**/android/captures/
+**/android/local.properties
+**/android/key.properties
+**/android/app/google-services.json
+!**/android/gradle/wrapper/gradle-wrapper.jar
+
+# iOS / macOS specific
+**/ios/Flutter/App.framework
+**/ios/Flutter/Flutter.framework
+**/ios/Flutter/Flutter.podspec
+**/ios/Flutter/Generated.xcconfig
+**/ios/Flutter/app.flt
+**/ios/Flutter/ephemeral/
+**/ios/Flutter/flutter_export_environment.sh
+**/ios/Runner/GeneratedPluginRegistrant.h
+**/ios/Runner/GeneratedPluginRegistrant.m
+**/ios/DerivedData/
+**/ios/Runner.xcworkspace/
+**/ios/Pods/
+**/ios/.symlinks/
+**/ios/profile
+**/ios/debug
+**/ios/release
+**/macos/Flutter/ephemeral/
+**/macos/Pods/
+
+# Windows platform
+**/windows/flutter/ephemeral/
+
+# Linux platform
+**/linux/flutter/ephemeral/
+
+# Web specific
+**/web/icons/
+
+# Fastlane
+**/fastlane/report.xml
+**/fastlane/Preview.html
+**/fastlane/screenshots
+**/fastlane/test_output
+
+# Sensitive files / Environment configs
+*.env
+*.env.*
+!.env.example
+*.keystore
+*.jks
+*.p12
+*.pem
