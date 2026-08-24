@@ -1,0 +1,4 @@
+<resources>
+    <string name="app_name">"cafeverse-tauri"</string>
+    <string name="main_activity_title">"cafeverse-tauri"</string>
+</resources>
