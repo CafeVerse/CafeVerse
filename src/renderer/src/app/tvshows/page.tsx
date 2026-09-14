@@ -77,7 +77,7 @@ const getSlug = (item: MediaItem): string => item.slug || String(item.id)
 
 // ─── Sub-components ──────────────────────────────────────────────────────────
 
-function TvShowCard({
+const TvShowCard = React.memo(function TvShowCard({
   item,
   inWatchlist,
   onNavigate,
@@ -85,8 +85,8 @@ function TvShowCard({
 }: {
   item: MediaItem
   inWatchlist: boolean
-  onNavigate: () => void
-  onWatchlistToggle: (e: React.MouseEvent) => void
+  onNavigate: (item: MediaItem) => void
+  onWatchlistToggle: (e: React.MouseEvent, item: MediaItem) => void
 }): React.JSX.Element {
   const poster = getPoster(item)
   const year = item.releaseDate
@@ -97,7 +97,7 @@ function TvShowCard({
 
   return (
     <div
-      onClick={onNavigate}
+      onClick={() => onNavigate(item)}
       className="group relative cursor-pointer rounded-xl border border-border/30 hover:border-primary/25 bg-muted/10 overflow-hidden transition-all duration-300 hover:-translate-y-1 hover:shadow-xl hover:shadow-primary/5"
     >
       <div className="aspect-2/3 w-full bg-muted relative overflow-hidden">
@@ -130,7 +130,7 @@ function TvShowCard({
 
         {/* Watchlist quick-add (hover-reveal) */}
         <button
-          onClick={onWatchlistToggle}
+          onClick={(e) => onWatchlistToggle(e, item)}
           title={inWatchlist ? 'Remove from watchlist' : 'Add to watchlist'}
           className={`absolute top-2 left-2 size-6 rounded-md flex items-center justify-center cursor-pointer transition-all duration-200 border opacity-0 group-hover:opacity-100 ${
             inWatchlist
@@ -160,7 +160,7 @@ function TvShowCard({
       </div>
     </div>
   )
-}
+})
 
 function TvShowCardSkeleton(): React.JSX.Element {
   return (
@@ -213,10 +213,13 @@ export default function TvShowsPage(): React.JSX.Element {
     }
   })
 
+  const watchlistSet = React.useMemo(() => {
+    return new Set(watchlist.map((w) => `${w.contentType}-${w.id}`))
+  }, [watchlist])
+
   const isInWatchlist = useCallback(
-    (item: MediaItem) =>
-      watchlist.some((w) => w.id === item.id && w.contentType === item.contentType),
-    [watchlist]
+    (item: MediaItem) => watchlistSet.has(`${item.contentType}-${item.id}`),
+    [watchlistSet]
   )
 
   const toggleWatchlist = useCallback((item: MediaItem) => {
@@ -377,6 +380,21 @@ export default function TvShowsPage(): React.JSX.Element {
   useEffect(() => {
     loadShows()
   }, [loadShows])
+
+  const handleNavigate = useCallback(
+    (show: MediaItem) => {
+      navigate(`/tv/${getSlug(show)}`)
+    },
+    [navigate]
+  )
+
+  const handleWatchlistToggle = useCallback(
+    (e: React.MouseEvent, show: MediaItem) => {
+      e.stopPropagation()
+      toggleWatchlist(show)
+    },
+    [toggleWatchlist]
+  )
 
   // ── Derived ───────────────────────────────────────────────────────────────
   const spotlight = featured[featuredIdx]
@@ -548,11 +566,8 @@ export default function TvShowsPage(): React.JSX.Element {
                 key={`${show.id}-${show.contentType}`}
                 item={show}
                 inWatchlist={isInWatchlist(show)}
-                onNavigate={() => navigate(`/tv/${getSlug(show)}`)}
-                onWatchlistToggle={(e) => {
-                  e.stopPropagation()
-                  toggleWatchlist(show)
-                }}
+                onNavigate={handleNavigate}
+                onWatchlistToggle={handleWatchlistToggle}
               />
             ))}
           </div>

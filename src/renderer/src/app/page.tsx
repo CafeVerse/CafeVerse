@@ -113,9 +113,13 @@ export default function DashboardPage(): React.JSX.Element {
     throw new Error(`Failed to fetch ${endpoint} from ${cleanBase}`)
   }, [])
 
+  const watchlistSet = React.useMemo(() => {
+    return new Set(watchlist.map((w) => `${w.contentType}-${w.id}`))
+  }, [watchlist])
+
   // Sync watchlist to localStorage
   const toggleWatchlist = (item: MediaItem): void => {
-    const isSaved = watchlist.some((w) => w.id === item.id && w.contentType === item.contentType)
+    const isSaved = watchlistSet.has(`${item.contentType}-${item.id}`)
     let updated: MediaItem[] = []
     if (isSaved) {
       updated = watchlist.filter((w) => !(w.id === item.id && w.contentType === item.contentType))
@@ -126,9 +130,10 @@ export default function DashboardPage(): React.JSX.Element {
     localStorage.setItem('cafeverse_watchlist', JSON.stringify(updated))
   }
 
-  const isItemInWatchlist = (item: MediaItem): boolean => {
-    return watchlist.some((w) => w.id === item.id && w.contentType === item.contentType)
-  }
+  const isItemInWatchlist = useCallback(
+    (item: MediaItem): boolean => watchlistSet.has(`${item.contentType}-${item.id}`),
+    [watchlistSet]
+  )
 
   // Safe fallback backdrop image generator
   const getBackdrop = (item?: MediaItem): string => {
